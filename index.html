@@ -243,7 +243,7 @@
           <div class="info-card">
             <div class="card-icon">🌍</div>
             <h3>Plan for the Majors</h3>
-            <p>Dreaming of Boston, London, or New York? Select a 2026 World Marathon Major to auto-generate a weekly savings and training budget alongside your running schedule.</p>
+            <p>Dreaming of Boston, London, or New York? Select a World Marathon Major to auto-generate a weekly savings and training budget alongside your running schedule.</p>
           </div>
         </div>
       </section>
@@ -297,16 +297,16 @@
             </div>
 
             <div class="form-group">
-              <label for="race-selector">2026 World Marathon Majors</label>
+              <label for="race-selector">World Marathon Majors</label>
               <select id="race-selector">
                 <option value="custom">-- Independent / Local Race --</option>
-                <option value="tokyo">Tokyo Marathon 2026 ($230 Entry Fee)</option>
-                <option value="boston">Boston Marathon 2026 ($260 Entry Fee)</option>
-                <option value="london">London Marathon 2026 ($300 Entry Fee)</option>
-                <option value="sydney">Sydney Marathon 2026 ($230 Entry Fee)</option>
-                <option value="berlin">Berlin Marathon 2026 ($240 Entry Fee)</option>
-                <option value="chicago">Chicago Marathon 2026 ($250 Entry Fee)</option>
-                <option value="nyc">TCS New York City Marathon 2026 ($333 Entry Fee)</option>
+                <option value="tokyo">Tokyo Marathon ($230 Entry Fee)</option>
+                <option value="boston">Boston Marathon ($260 Entry Fee)</option>
+                <option value="london">London Marathon ($300 Entry Fee)</option>
+                <option value="sydney">Sydney Marathon ($230 Entry Fee)</option>
+                <option value="berlin">Berlin Marathon ($240 Entry Fee)</option>
+                <option value="chicago">Chicago Marathon ($250 Entry Fee)</option>
+                <option value="nyc">TCS New York City Marathon ($333 Entry Fee)</option>
               </select>
             </div>
 
@@ -677,11 +677,10 @@
       }
     });
 
-    // 5. STRAVA OAUTH INTEGRATION ENGINE
+    // 5. STRAVA OAUTH INTEGRATION ENGINE (FIXED REDIRECT)
     document.getElementById('strava-connect-btn').addEventListener('click', function(e) {
       e.preventDefault();
-      const currentAppURL = window.location.origin + window.location.pathname;
-      const authorizationGatewayURL = `https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=${encodeURIComponent(currentAppURL)}&response_type=code&scope=activity:read_all`;
+      const authorizationGatewayURL = `https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=http://localhost&response_type=code&scope=activity:read_all`;
       window.location.assign(authorizationGatewayURL);
     });
 
@@ -711,14 +710,14 @@
     }
 
     // 6. TRAINING ALLOCATOR ENGINE
-    const corporateRaceRegistry2026 = {
-      tokyo:   { name: "Tokyo Marathon 2026",   fee: 230,  peakMiles: 40 },
-      boston:  { name: "Boston Marathon 2026",  fee: 260,  peakMiles: 45 },
-      london:  { name: "London Marathon 2026",  fee: 300,  peakMiles: 45 },
-      sydney:  { name: "Sydney Marathon 2026",  fee: 230,  peakMiles: 40 },
-      berlin:  { name: "Berlin Marathon 2026",  fee: 240,  peakMiles: 42 },
-      chicago: { name: "Chicago Marathon 2026", fee: 250,  peakMiles: 45 },
-      nyc:     { name: "TCS New York City Marathon 2026", fee: 333, peakMiles: 45 },
+    const corporateRaceRegistry = {
+      tokyo:   { name: "Tokyo Marathon",   fee: 230,  peakMiles: 40 },
+      boston:  { name: "Boston Marathon",  fee: 260,  peakMiles: 45 },
+      london:  { name: "London Marathon",  fee: 300,  peakMiles: 45 },
+      sydney:  { name: "Sydney Marathon",  fee: 230,  peakMiles: 40 },
+      berlin:  { name: "Berlin Marathon",  fee: 240,  peakMiles: 42 },
+      chicago: { name: "Chicago Marathon", fee: 250,  peakMiles: 45 },
+      nyc:     { name: "TCS New York City Marathon", fee: 333, peakMiles: 45 },
       custom:  { name: "Custom Event Profile",  fee: 0,    peakMiles: 0 }
     };
 
@@ -764,7 +763,7 @@
       let absolutePeakRequirement = volumeSafetyIndex[targetDistanceProfile];
       
       if (targetedMajorKey !== 'custom' && (targetDistanceProfile === 'marathon' || targetDistanceProfile === 'half')) {
-        absolutePeakRequirement = corporateRaceRegistry2026[targetedMajorKey].peakMiles;
+        absolutePeakRequirement = corporateRaceRegistry[targetedMajorKey].peakMiles;
       }
 
       let compoundedSafeMargin = coreBaseVolume * Math.pow(1.10, operationalHorizon);
@@ -835,7 +834,7 @@
       generateBiomechanicalCalendar(operationalHorizon, coreBaseVolume, absolutePeakRequirement, aerobicBasePaceString, metabolicThresholdPaceString);
 
       if (targetedMajorKey !== 'custom') {
-        let raceAssetData = corporateRaceRegistry2026[targetedMajorKey];
+        let raceAssetData = corporateRaceRegistry[targetedMajorKey];
         let totalStructuralCost = raceAssetData.fee + fiscalAllocation;
         fiscalProfileBox.classList.remove('hidden');
         fiscalProfileBox.innerHTML = `
