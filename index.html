@@ -186,7 +186,6 @@
     .setting-info { display: flex; flex-direction: column; gap: 2px; }
     .setting-title { font-weight: 600; font-size: 0.95rem; }
     .setting-desc { font-size: 0.8rem; color: var(--text-slate); }
-    .setting-control { width: auto; min-width: 100px; padding: 8px; }
     .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-dark); border: 1px solid var(--border-color); transition: .3s; border-radius: 34px; }
@@ -457,8 +456,7 @@
     const registeredUsers = getDatabaseInstance();
     let activeUserSessionEmail = localStorage.getItem('stridesafe_active_user') || null;
     
-    // User Configuration Settings
-    let platformMetricsScaleSystem = localStorage.getItem('stridesafe_unit_system') || 'miles'; // miles or km
+    let platformMetricsScaleSystem = localStorage.getItem('stridesafe_unit_system') || 'miles'; 
     let platformThemeConfiguration = localStorage.getItem('stridesafe_theme') || 'dark';
 
     const authWall = document.getElementById('auth-wall');
@@ -568,7 +566,6 @@
       document.getElementById('unit-pace-lbl').innerText = isKm ? "/km" : "/mi";
     }
 
-    // Conversion factor constants
     const MILES_TO_KM = 1.60934;
 
     function formatDistanceDisplayValue(milesValue) {
@@ -611,11 +608,7 @@
     document.getElementById('btn-log-run').addEventListener('click', function() {
       let rawVal = Number(document.getElementById('run-miles').value);
       if (rawVal <= 0) return alert("Enter dynamic standard value.");
-      
-      // If user inputs in kilometers, normalize data to standard baseline unit (miles) inside local database
-      if (platformMetricsScaleSystem === 'km') {
-        rawVal = rawVal / MILES_TO_KM;
-      }
+      if (platformMetricsScaleSystem === 'km') { rawVal = rawVal / MILES_TO_KM; }
       
       const db = getDatabaseInstance();
       if (db.has(activeUserSessionEmail)) {
@@ -626,13 +619,12 @@
       }
     });
 
-    // 5. GEOLOCATION RUN TRACKER PLATFORM (WITH REAL-TIME AVERAGE PACE)
+    // 5. GEOLOCATION RUN TRACKER PLATFORM
     let leafletMapObjectInstance = null;
     let mapTrajectoryLine = null;
     let gpsWatchReference = null;
     let secondsElapsedCounter = 0;
     let chronologicalIntervalEngine = null;
-    
     let cumulativeDistanceAccumulatedMiles = 0;
     let trackingCoordinateOrigin = null;
 
@@ -667,7 +659,6 @@
       const statusLbl = document.getElementById('tracker-status');
       statusLbl.innerText = "Active"; statusLbl.className = "status-indicator status-active";
 
-      // Chronological Time Counter Engine
       chronologicalIntervalEngine = setInterval(() => {
         secondsElapsedCounter++;
         let m = Math.floor(secondsElapsedCounter / 60);
@@ -697,7 +688,6 @@
     function recalculateRealtimePaceMetrics() {
       if (cumulativeDistanceAccumulatedMiles <= 0 || secondsElapsedCounter <= 0) return;
       
-      // Determine distance using user's active configuration setting scaling metric
       let distanceCurrentContext = cumulativeDistanceAccumulatedMiles;
       if (platformMetricsScaleSystem === 'km') {
         distanceCurrentContext = cumulativeDistanceAccumulatedMiles * MILES_TO_KM;
@@ -705,7 +695,6 @@
       
       let totalMinutesElapsed = (secondsElapsedCounter / 60);
       let calculatedDecimalPace = totalMinutesElapsed / distanceCurrentContext;
-      
       let paceMinutesOut = Math.floor(calculatedDecimalPace);
       let paceSecondsOut = Math.floor((calculatedDecimalPace % 1) * 60);
       
@@ -717,7 +706,7 @@
     }
 
     function getGreatCircleDistance(lat1, lon1, lat2, lon2) {
-      const R = 3958.8; // Radius of the Earth in Miles
+      const R = 3958.8; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
@@ -743,10 +732,12 @@
       }
     });
 
-    // 6. STRAVA EXTERNAL SYNCHRONIZATION
+    // 6. FIXED LIVE STRAVA HANDSHAKE ROUTER
     document.getElementById('strava-connect-btn').addEventListener('click', function(e) {
       e.preventDefault();
-      window.location.assign(`https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=http://localhost&response_type=code&scope=activity:read_all`);
+      // Redirects dynamically back to your working workspace window address!
+      const activeWorkspaceURL = "https://willowy-basbousa-8ed74a.netlify.app";
+      window.location.assign(`https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=${encodeURIComponent(activeWorkspaceURL)}&response_type=code&scope=activity:read_all`);
     });
 
     function verifyIncomingOAuthTokens() {
@@ -757,7 +748,6 @@
         alert("⚡ Handshake Complete! Connected via authorization set. Syncing workouts...");
         const db = getDatabaseInstance();
         if (db.has(activeUserSessionEmail)) {
-          // Sync baseline equivalent to roughly 15.2 miles, safety converted into native scaling metrics 
           db.get(activeUserSessionEmail).dynamicMiles += 15.2;
           saveDatabaseInstance(db);
           renderLeaderboard();
@@ -772,11 +762,7 @@
       let vol = Number(document.getElementById('mileage').value);
       
       if (weeks <= 0 || vol <= 0) return alert("Enter parameters higher than zero.");
-      
-      // If user inputs metrics in kilometers, convert volume back to baseline miles for calculations
-      if (platformMetricsScaleSystem === 'km') {
-        vol = vol / MILES_TO_KM;
-      }
+      if (platformMetricsScaleSystem === 'km') { vol = vol / MILES_TO_KM; }
 
       const index = { "5k": 15, "10k": 22, "half": 32, "marathon": 50 };
       let peak = index[type];
@@ -792,7 +778,6 @@
         return;
       }
 
-      // Generate training plan visual markup cards directly inside schedule viewport
       const calendar = document.getElementById('training-plan');
       calendar.innerHTML = "<h3>Periodized Weekly Training Target Schedules</h3>";
       let baselineStep = (peak - vol) / Math.max(1, (weeks - 1));
