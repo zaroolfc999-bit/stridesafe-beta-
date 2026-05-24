@@ -422,15 +422,6 @@
           </div>
         </div>
       </section>
-
-      <section id="strava-view" class="tab-viewport hidden">
-        <div class="control-panel-card" style="text-align:center; padding:40px 20px;">
-          <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
-          <h2>App Connections</h2>
-          <p class="panel-subtext">Authenticate data streams to safely extract and import verification code sets from Strava.</p>
-          <button id="strava-connect-btn" class="strava-btn">Connect with Strava</button>
-        </div>
-      </section>
     </main>
   </div>
 
@@ -514,8 +505,7 @@
       'nav-home': document.getElementById('home-view'),
       'nav-gps': document.getElementById('gps-view'),
       'nav-leaderboard': document.getElementById('leaderboard-view'),
-      'nav-settings': document.getElementById('nav-settings-view'),
-      'nav-strava': document.getElementById('strava-view')
+      'nav-settings': document.getElementById('nav-settings-view')
     };
 
     Object.keys(viewports).forEach(id => {
@@ -732,30 +722,7 @@
       }
     });
 
-    // 6. FIXED LIVE STRAVA HANDSHAKE ROUTER
-    document.getElementById('strava-connect-btn').addEventListener('click', function(e) {
-      e.preventDefault();
-      // Redirects dynamically back to your working workspace window address!
-      const activeWorkspaceURL = "https://willowy-basbousa-8ed74a.netlify.app";
-      window.location.assign(`https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=${encodeURIComponent(activeWorkspaceURL)}&response_type=code&scope=activity:read_all`);
-    });
-
-    function verifyIncomingOAuthTokens() {
-      const params = new URLSearchParams(window.location.search);
-      if (params.has('code')) {
-        const code = params.get('code');
-        window.history.replaceState({}, document.title, window.location.pathname);
-        alert("⚡ Handshake Complete! Connected via authorization set. Syncing workouts...");
-        const db = getDatabaseInstance();
-        if (db.has(activeUserSessionEmail)) {
-          db.get(activeUserSessionEmail).dynamicMiles += 15.2;
-          saveDatabaseInstance(db);
-          renderLeaderboard();
-        }
-      }
-    }
-
-    // 7. PERFORMANCE MACRO COEFFICIENT GENERATOR
+    // 6. PERFORMANCE MACRO COEFFICIENT GENERATOR
     document.getElementById('calculate-btn').addEventListener('click', function() {
       const type = document.getElementById('race-type').value;
       const weeks = Number(document.getElementById('weeks').value);
@@ -805,8 +772,13 @@
     });
 
     window.addEventListener('load', function() {
-      setTimeout(verifyIncomingOAuthTokens, 250);
-      if (activeUserSessionEmail) initializeClientDashboard(activeUserSessionEmail);
+      // Robust Fallback: If no session cookie exists, kick back to auth gate instead of blank views
+      if (activeUserSessionEmail) {
+        initializeClientDashboard(activeUserSessionEmail);
+      } else {
+        authWall.classList.remove('hidden');
+        appWrapper.classList.add('hidden');
+      }
     });
   </script>
 </body>
