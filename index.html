@@ -2,10 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StrideSafe — Beta Platform</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>StrideSafe — Elite Performance Platform</title>
   
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
   <style>
+    /* COMPREHENSIVE THEME COHESION SYSTEM */
     :root {
       --bg-dark: #0f172a;
       --card-dark: #1e293b;
@@ -14,6 +18,15 @@
       --text-slate: #94a3b8;
       --success-green: #4ade80;
       --error-red: #f87171;
+      --border-color: #334155;
+    }
+
+    body.light-theme {
+      --bg-dark: #f8fafc;
+      --card-dark: #ffffff;
+      --text-light: #0f172a;
+      --text-slate: #64748b;
+      --border-color: #e2e8f0;
     }
 
     body {
@@ -21,305 +34,278 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: var(--bg-dark);
       color: var(--text-light);
+      padding-bottom: env(safe-area-inset-bottom);
+      transition: background-color 0.3s, color 0.3s;
     }
 
     .hidden { display: none !important; }
 
-    /* AUTHENTICATION SCREEN */
+    /* MOBILE-FIRST AUTHENTICATION OVERLAY */
     .auth-overlay {
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      padding: 20px;
+      padding: 16px;
       box-sizing: border-box;
     }
     .auth-container {
       background: var(--card-dark);
-      padding: 40px;
+      padding: 24px;
       border-radius: 16px;
       width: 100%;
       max-width: 400px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      border: 1px solid var(--border-color);
       box-sizing: border-box;
     }
     .brand-logo {
-      font-size: 2rem;
-      font-weight: 800;
+      font-size: 2.2rem;
+      font-weight: 900;
       text-align: center;
       margin-bottom: 8px;
+      letter-spacing: -0.05em;
     }
     .brand-logo span, .logo span { color: var(--accent-blue); }
-    #auth-subtitle { text-align: center; color: var(--text-slate); margin-top: 0; margin-bottom: 24px; }
+    #auth-subtitle { text-align: center; color: var(--text-slate); margin-top: 0; margin-bottom: 24px; font-size: 0.95rem; }
 
-    /* INPUT & INTERFACE STYLING */
-    .form-group { margin-bottom: 20px; }
-    label { display: block; margin-bottom: 8px; color: var(--text-slate); font-size: 0.9rem; }
+    /* FORM COMPONENTS */
+    .form-group { margin-bottom: 16px; }
+    .form-row-split { display: flex; gap: 10px; }
+    label { display: block; margin-bottom: 6px; color: var(--text-slate); font-size: 0.85rem; font-weight: 600; }
     input, select {
       width: 100%;
-      padding: 12px;
-      background: #0f172a;
-      border: 1px solid #334155;
-      border-radius: 8px;
-      color: white;
+      padding: 14px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      color: var(--text-light);
       box-sizing: border-box;
       font-size: 1rem;
     }
+    
     .prime-btn, .action-btn, .action-btn-secondary {
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       background: var(--accent-blue);
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       color: #0f172a;
       font-weight: 700;
       cursor: pointer;
       font-size: 1rem;
-      transition: background 0.2s;
     }
-    .action-btn-secondary { background: #334155; color: white; margin-top: 10px; }
-    .auth-toggle-text { text-align: center; color: var(--text-slate); margin-top: 20px; }
+    .action-btn-secondary { background: var(--border-color); color: var(--text-light); margin-top: 10px; }
+    .auth-toggle-text { text-align: center; color: var(--text-slate); margin-top: 20px; font-size: 0.9rem; }
     .auth-toggle-text span { color: var(--accent-blue); cursor: pointer; text-decoration: underline; }
-    .error-banner { color: var(--error-red); background: rgba(248, 113, 113, 0.1); padding: 12px; border-radius: 6px; text-align: center; font-size: 0.9rem; margin-top: 15px; }
+    .error-banner { color: var(--error-red); background: rgba(248, 113, 113, 0.1); padding: 12px; border-radius: 8px; text-align: center; font-size: 0.85rem; margin-top: 15px; }
 
-    /* DASHBOARD & NAVIGATION */
+    /* IPHONE RESPONSIVE HEADER */
     .main-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: calc(12px + env(safe-area-inset-top)) 16px 12px 16px;
+      background: var(--card-dark);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .header-top-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 40px;
-      background: var(--card-dark);
-      border-bottom: 1px solid #334155;
+      width: 100%;
     }
-    .logo { font-size: 1.5rem; font-weight: 800; }
-    .user-badge { color: var(--text-slate); font-size: 0.9rem; }
-    .nav-links { display: flex; gap: 10px; }
+    .logo { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.05em; }
+    .user-badge { color: var(--text-slate); font-size: 0.85rem; font-weight: 500; }
+    
+    /* SCROLLABLE HORIZONTAL NAVIGATION */
+    .nav-links {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      width: 100%;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .nav-links::-webkit-scrollbar { display: none; }
     .nav-link-btn {
-      background: transparent;
-      border: none;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
       color: var(--text-slate);
       padding: 10px 16px;
       cursor: pointer;
-      font-size: 1rem;
-      border-radius: 6px;
+      font-size: 0.85rem;
+      border-radius: 20px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
-    .nav-link-btn.active { color: var(--accent-blue); font-weight: 700; background: rgba(56, 189, 248, 0.1); }
-    .logout-link-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+    .nav-link-btn.active { color: #0f172a; font-weight: 700; background: var(--accent-blue); border-color: var(--accent-blue); }
+    .logout-link-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 10px 16px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; }
 
-    /* VIEWPORT CONTENT PLATFORM */
-    .content-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
-    .editorial-hero { text-align: center; margin-bottom: 40px; }
-    .editorial-hero h1 { font-size: 2.5rem; margin-bottom: 12px; }
-    .lead-text { font-size: 1.2rem; color: var(--text-slate); max-width: 800px; margin: 0 auto; }
+    /* LAYOUT ADAPTATION PANELS */
+    .content-container { padding: 16px; max-width: 100%; box-sizing: border-box; }
+    .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
     
-    .info-deck { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 40px; }
     .info-card, .control-panel-card, .telemetry-card, .leaderboard-card {
       background: var(--card-dark);
-      padding: 30px;
-      border-radius: 12px;
-      border: 1px solid #334155;
+      padding: 20px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      box-sizing: border-box;
     }
-    .card-icon { font-size: 2rem; margin-bottom: 15px; }
-    
-    .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; align-items: start; }
-    .panel-subtext { color: var(--text-slate); font-size: 0.9rem; margin-top: -8px; margin-bottom: 24px; }
-    
-    .results-display-panel { display: flex; flex-direction: column; gap: 20px; }
-    .status-banner { padding: 20px; background: #1e293b; border-left: 4px solid var(--accent-blue); border-radius: 6px; font-size: 1.1rem; }
-    .data-block { background: var(--card-dark); padding: 24px; border-radius: 8px; border: 1px solid #334155; }
+    .panel-subtext { color: var(--text-slate); font-size: 0.85rem; margin-top: -4px; margin-bottom: 20px; }
+    .results-display-panel { display: flex; flex-direction: column; gap: 16px; }
+    .status-banner { padding: 16px; background: var(--bg-dark); border-left: 4px solid var(--accent-blue); border-radius: 8px; font-size: 0.95rem; }
+    .data-block { background: var(--bg-dark); padding: 16px; border-radius: 10px; border: 1px solid var(--border-color); }
     
     /* WEEKLY TIMELINE SCHEDULE */
-    .schedule-timeline { margin-top: 20px; }
-    .week-box { background: var(--card-dark); border-top: 4px solid var(--accent-blue); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    .day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-top: 15px; }
-    .day-item { background: #0f172a; padding: 12px; border-radius: 6px; font-size: 0.85rem; border: 1px solid #334155; }
-    .day-title { display: block; color: var(--accent-blue); font-weight: 700; margin-bottom: 4px; font-size: 0.8rem; text-transform: uppercase; }
+    .week-box { background: var(--card-dark); border-top: 4px solid var(--accent-blue); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+    .day-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+    .day-item { background: var(--bg-dark); padding: 12px; border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+    .day-title { color: var(--accent-blue); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; }
 
-    /* GPS WORKSPACE */
-    .telemetry-dashboard { display: flex; gap: 20px; margin: 30px 0; }
-    .metric-container { background: #0f172a; padding: 24px; border-radius: 8px; flex: 1; text-align: center; border: 1px solid #334155; }
-    .metric-label { display: block; color: var(--text-slate); font-size: 0.9rem; margin-bottom: 8px; }
-    .metric-value { font-size: 3rem; font-weight: 800; color: var(--accent-blue); display: block; }
-    .metric-unit { font-size: 0.9rem; color: var(--text-slate); }
-    .status-indicator { font-weight: 700; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; }
+    /* TELEMETRY METRIC DASHBOARD */
+    .telemetry-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
+    .metric-container { background: var(--bg-dark); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid var(--border-color); }
+    .metric-label { display: block; color: var(--text-slate); font-size: 0.75rem; margin-bottom: 4px; }
+    .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--accent-blue); display: block; }
+    .metric-unit { font-size: 0.75rem; color: var(--text-slate); }
+    
+    #map-frame { width: 100%; height: 260px; background: var(--bg-dark); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; z-index: 1; }
+    .status-indicator { font-weight: 700; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; }
     .status-disabled { background: rgba(148, 163, 184, 0.1); color: var(--text-slate); }
     .status-active { background: rgba(74, 222, 128, 0.1); color: var(--success-green); }
-    .control-row { display: flex; gap: 15px; }
-    .btn-success { background: var(--success-green); color: #0f172a; padding: 14px 28px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; }
-    .btn-danger { background: var(--error-red); color: white; padding: 14px 28px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 1rem; }
+    .control-row { display: flex; gap: 12px; }
+    .btn-success { background: var(--success-green); color: #0f172a; padding: 14px; border: none; border-radius: 10px; font-weight: 700; width: 100%; }
+    .btn-danger { background: var(--error-red); color: white; padding: 14px; border: none; border-radius: 10px; font-weight: 700; width: 100%; }
 
-    /* LEDGER LISTS */
-    .filter-group { display: flex; gap: 10px; margin-bottom: 20px; }
-    .segment-btn { flex: 1; padding: 10px; background: #0f172a; border: 1px solid #334155; color: var(--text-slate); border-radius: 6px; cursor: pointer; font-weight: 600; }
+    /* SETTINGS COMPONENT GRID MATRIX */
+    .settings-grid { display: flex; flex-direction: column; gap: 16px; }
+    .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border-color); }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-info { display: flex; flex-direction: column; gap: 2px; }
+    .setting-title { font-weight: 600; font-size: 0.95rem; }
+    .setting-desc { font-size: 0.8rem; color: var(--text-slate); }
+    .setting-control { width: auto; min-width: 100px; padding: 8px; }
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-dark); border: 1px solid var(--border-color); transition: .3s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--text-slate); transition: .3s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-blue); }
+    input:checked + .slider:before { transform: translateX(24px); background-color: #0f172a; }
+
+    /* INTERACTIVE ELEMENTS */
+    .filter-group { display: flex; gap: 8px; margin-bottom: 16px; }
+    .segment-btn { flex: 1; padding: 12px; background: var(--bg-dark); border: 1px solid var(--border-color); color: var(--text-slate); border-radius: 8px; font-weight: 600; font-size: 0.85rem; }
     .segment-btn.active { background: var(--accent-blue); color: #0f172a; border-color: var(--accent-blue); }
-    .manual-log-box { margin-top: 30px; padding-top: 20px; border-top: 1px solid #334155; }
     .ledger-list { list-style: none; padding: 0; margin: 0; }
-    .ledger-list li { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid #334155; }
-    .ledger-list li:last-child { border-bottom: none; }
+    .ledger-list li { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
+    .strava-btn { background: #fc4c02; color: white; padding: 16px; border: none; border-radius: 10px; font-weight: 700; width: 100%; text-align: center; }
 
-    /* STRAVA STYLES */
-    .integration-body { display: flex; flex-direction: column; align-items: center; padding: 40px 0; }
-    .api-status-shield { font-size: 4rem; margin-bottom: 20px; }
-    .strava-btn { background: #fc4c02; color: white; padding: 14px 32px; border: none; border-radius: 8px; font-weight: 700; font-size: 1.1rem; cursor: pointer; }
+    @media (min-width: 768px) {
+      .main-header { flex-direction: row; justify-content: space-between; padding: 20px 40px; }
+      .header-top-row { width: auto; gap: 24px; }
+      .nav-links { width: auto; overflow-x: visible; }
+      .content-container { padding: 40px; max-width: 1200px; margin: 0 auto; }
+      .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
+      #map-frame { height: 360px; }
+      .telemetry-dashboard { grid-template-columns: repeat(4, 1fr); }
+      .day-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+      .day-item { flex-direction: column; align-items: flex-start; gap: 6px; }
+    }
   </style>
 </head>
 <body>
 
   <div id="auth-wall" class="auth-overlay">
     <div class="auth-container">
-      <div class="auth-header">
-        <div class="brand-logo">Stride<span>Safe</span></div>
-        <p id="auth-subtitle">Join the community. Protect your run.</p>
-      </div>
+      <div class="brand-logo">Stride<span>Safe</span></div>
+      <p id="auth-subtitle">Athlete Performance Synchronization Gate</p>
 
       <div id="signup-form-block">
-        <div class="form-group">
-          <label for="reg-email">Email Address</label>
-          <input type="email" id="reg-email" placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label for="reg-password">Password</label>
-          <input type="password" id="reg-password" placeholder="8 or more characters">
-        </div>
-        <div class="form-group">
-          <label for="reg-age">Your Age</label>
-          <input type="number" id="reg-age" placeholder="Must be 12 or older">
-        </div>
-        <button id="btn-submit-signup" class="prime-btn">Create Athlete Profile</button>
-        <p class="auth-toggle-text">Already a member? <span id="go-to-signin">Sign In</span></p>
+        <div class="form-group"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Minimum 8 characters"></div>
+        <div class="form-group"><label>Athlete Age</label><input type="number" id="reg-age" placeholder="Must be 12 or older"></div>
+        <button id="btn-submit-signup" class="prime-btn">Create Profile</button>
+        <p class="auth-toggle-text">Already registered? <span id="go-to-signin">Sign In</span></p>
       </div>
 
       <div id="signin-form-block" class="hidden">
-        <div class="form-group">
-          <label for="login-email">Email Address</label>
-          <input type="email" id="login-email" placeholder="you@example.com">
-        </div>
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="Enter your password">
-        </div>
-        <button id="btn-submit-signin" class="prime-btn">Sign In to Dashboard</button>
-        <p class="auth-toggle-text">New to StrideSafe? <span id="go-to-signup">Join Now</span></p>
+        <div class="form-group"><label>Email Address</label><input type="email" id="login-email" placeholder="you@example.com"></div>
+        <div class="form-group"><label>Password</label><input type="password" id="login-password" placeholder="Enter security key"></div>
+        <button id="btn-submit-signin" class="prime-btn">Sign In</button>
+        <p class="auth-toggle-text">New to platform? <span id="go-to-signup">Join Now</span></p>
       </div>
-
       <p id="auth-error-msg" class="error-banner hidden"></p>
     </div>
   </div>
 
   <div id="app-wrapper" class="hidden">
-    
     <header class="main-header">
-      <div class="logo">Stride<span>Safe</span></div>
-      <div class="user-badge">Athlete: <span id="current-user-display">Guest</span></div>
+      <div class="header-top-row">
+        <div class="logo">Stride<span>Safe</span></div>
+        <div class="user-badge"><span id="current-user-display">Guest</span></div>
+      </div>
       <nav class="nav-links">
         <button id="nav-about" class="nav-link-btn active">About Platform</button>
         <button id="nav-home" class="nav-link-btn">Race Trainer</button>
         <button id="nav-gps" class="nav-link-btn">Live Tracking</button>
         <button id="nav-leaderboard" class="nav-link-btn">Leaderboard</button>
-        <button id="nav-strava" class="nav-link-btn">Apps & Devices</button>
+        <button id="nav-settings" class="nav-link-btn">Control Panel</button>
         <button id="btn-logout" class="logout-link-btn">Sign Out</button>
       </nav>
     </header>
 
     <main class="content-container">
-
       <section id="about-view" class="tab-viewport">
         <div class="editorial-hero">
           <h1>Run Stronger. Stay Healthy.</h1>
-          <p class="lead-text">StrideSafe combines training science with smart safety tracking to help runners avoid overtraining, plan for iconic race goals, and log miles with confidence.</p>
-        </div>
-        
-        <div class="info-deck">
-          <div class="info-card">
-            <div class="card-icon">👟</div>
-            <h3>Your Personal Log</h3>
-            <p>Every account gets its own database. Your training plans, personal records, and weekly mileage totals stay safely stored under your private athlete profile.</p>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">⚡</div>
-            <h3>Smart Race Targets</h3>
-            <p>Ready to chase a new PR? Our upgraded trainer analyzes your current mileage, your age, and your target timeline to project a safe, motivating race-day finish goal.</p>
-          </div>
-          <div class="info-card">
-            <div class="card-icon">🌍</div>
-            <h3>Plan for the Majors</h3>
-            <p>Dreaming of Boston, London, or New York? Select a World Marathon Major to auto-generate a weekly savings and training budget alongside your running schedule.</p>
-          </div>
+          <p class="lead-text">StrideSafe combines training metrics with structural periodization modules to bypass fatigue thresholds, safely plan target distances, and monitor runs.</p>
         </div>
       </section>
 
       <section id="home-view" class="tab-viewport hidden">
         <div class="dashboard-grid">
           <div class="control-panel-card">
-            <h2>Set Your Next Goal</h2>
-            <p class="panel-subtext">Tell us where your running stands today, and we'll build a safe path to your next finish line.</p>
-            
+            <h2>Set Your Distance Goal</h2>
             <div class="form-group">
-              <label for="race-type">Target Distance</label>
+              <label>Target Distance</label>
               <select id="race-type">
-                <option value="5k">5K Sprint (3.1 miles)</option>
-                <option value="10k">10K Standard (6.2 miles)</option>
-                <option value="half">Half Marathon (13.1 miles)</option>
-                <option value="marathon">Full Marathon (26.2 miles)</option>
+                <option value="5k">5K Sprint</option>
+                <option value="10k">10K Standard</option>
+                <option value="half">Half Marathon</option>
+                <option value="marathon">Full Marathon</option>
               </select>
             </div>
-            
-            <div class="form-group">
-              <label for="weeks">Weeks to Event</label>
-              <input type="number" id="weeks" placeholder="e.g., 8">
+            <div class="form-row-split">
+              <div class="form-group" style="flex:1;"><label>Weeks to Event</label><input type="number" id="weeks" placeholder="8"></div>
+              <div class="form-group" style="flex:1;"><label id="label-curr-mileage">Base Weekly Vol</label><input type="number" id="mileage" placeholder="15"></div>
             </div>
-            
             <div class="form-group">
-              <label for="mileage">Current Weekly Mileage</label>
-              <input type="number" id="mileage" placeholder="e.g., 13">
-            </div>
-
-            <div class="form-group">
-              <label for="pr-status">Recent PR / Benchmark</label>
+              <label>Benchmark History</label>
               <select id="pr-status">
-                <option value="never">No recent race time (We'll use an age-based estimate)</option>
-                <option value="has-pr">I have a recent race time to use</option>
+                <option value="never">No baseline profile (Use age estimate)</option>
+                <option value="has-pr">Use recent performance PR</option>
               </select>
             </div>
-
             <div id="pr-input-block" class="hidden">
-              <div class="form-group">
-                <label for="pr-bench">Benchmark Distance</label>
-                <select id="pr-bench">
-                  <option value="5k">5K Distance</option>
-                  <option value="10k">10K Distance</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="pr-time">Your Time (MM:SS format or total minutes)</label>
-                <input type="text" id="pr-time" placeholder="e.g., 23:50 or 23.83">
-              </div>
+              <div class="form-group"><label>Benchmark Distance</label><select id="pr-bench"><option value="5k">5K</option><option value="10k">10K</option></select></div>
+              <div class="form-group"><label>Time (MM:SS)</label><input type="text" id="pr-time" placeholder="23:50"></div>
             </div>
-
             <div class="form-group">
-              <label for="race-selector">World Marathon Majors</label>
+              <label>World Marathon Majors</label>
               <select id="race-selector">
-                <option value="custom">-- Independent / Local Race --</option>
-                <option value="tokyo">Tokyo Marathon ($230 Entry Fee)</option>
-                <option value="boston">Boston Marathon ($260 Entry Fee)</option>
-                <option value="london">London Marathon ($300 Entry Fee)</option>
-                <option value="sydney">Sydney Marathon ($230 Entry Fee)</option>
-                <option value="berlin">Berlin Marathon ($240 Entry Fee)</option>
-                <option value="chicago">Chicago Marathon ($250 Entry Fee)</option>
-                <option value="nyc">TCS New York City Marathon ($333 Entry Fee)</option>
+                <option value="custom">-- Local Independent Event --</option>
+                <option value="tokyo">Tokyo Marathon ($230)</option>
+                <option value="boston">Boston Marathon ($260)</option>
+                <option value="london">London Marathon ($300)</option>
+                <option value="nyc">New York City Marathon ($333)</option>
               </select>
             </div>
-
-            <div class="form-group">
-              <label for="travel-budget">Estimated Travel Budget ($)</label>
-              <input type="number" id="travel-budget" value="0">
-            </div>
-            
-            <button id="calculate-btn" class="action-btn">Build My Training Plan</button>
+            <button id="calculate-btn" class="action-btn">Generate Block Schedule</button>
           </div>
-
           <div class="results-display-panel">
-            <div id="result" class="status-banner">Ready to build. Fill in your stats above.</div>
+            <div id="result" class="status-banner">Awaiting inputs to structure parameters.</div>
             <div id="prediction-box" class="data-block hidden"></div>
             <div id="budget-breakdown" class="data-block hidden"></div>
             <div id="training-plan" class="schedule-timeline"></div>
@@ -329,24 +315,17 @@
 
       <section id="gps-view" class="tab-viewport hidden">
         <div class="telemetry-card">
-          <h2>GPS Activity Tracker</h2>
-          <p class="panel-subtext">Track your route and stream live distance metrics directly using your device sensors.</p>
-          
+          <h2>GPS Activity Space</h2>
+          <div id="map-frame"></div>
           <div class="telemetry-dashboard">
-            <div class="metric-container">
-              <span class="metric-label">Distance Covered</span>
-              <span id="live-distance" class="metric-value">0.00</span>
-              <span class="metric-unit">Miles</span>
-            </div>
-            <div class="metric-container">
-              <span class="metric-label">GPS Status</span>
-              <span id="tracker-status" class="status-indicator status-disabled">Inactive</span>
-            </div>
+            <div class="metric-container"><span class="metric-label">Distance</span><span id="live-distance" class="metric-value">0.00</span><span id="unit-dist-lbl" class="metric-unit">Miles</span></div>
+            <div class="metric-container"><span class="metric-label">Average Pace</span><span id="live-pace" class="metric-value">0:00</span><span id="unit-pace-lbl" class="metric-unit">/mi</span></div>
+            <div class="metric-container"><span class="metric-label">Time Elapsed</span><span id="live-duration" class="metric-value">00:00</span><span class="metric-unit">MM:SS</span></div>
+            <div class="metric-container"><span class="metric-label">Hardware Link</span><span id="tracker-status" class="status-indicator status-disabled">Inactive</span></div>
           </div>
-
           <div class="control-row">
-            <button id="btn-start-track" class="btn-success">Start Running</button>
-            <button id="btn-stop-track" class="btn-danger hidden">End & Save Workout</button>
+            <button id="btn-start-track" class="btn-success">Initiate Route Tracking</button>
+            <button id="btn-stop-track" class="btn-danger hidden">End & Commit Workout</button>
           </div>
         </div>
       </section>
@@ -354,80 +333,133 @@
       <section id="leaderboard-view" class="tab-viewport hidden">
         <div class="dashboard-grid">
           <div class="control-panel-card">
-            <h2>Feed Filters</h2>
-            <p class="panel-subtext">Toggle between the public community ledger and your private running space.</p>
-            
+            <h2>Ledger Control</h2>
             <div class="filter-group">
-              <button id="btn-public" class="segment-btn active">Public Feed</button>
-              <button id="btn-private" class="segment-btn">My Space</button>
+              <button id="btn-public" class="segment-btn active">Public Network</button>
+              <button id="btn-private" class="segment-btn">Private Profile</button>
             </div>
-            
             <div class="form-group">
-              <label for="time-filter">Timeframe</label>
-              <select id="time-filter">
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
+              <label>Filter Horizon</label>
+              <select id="time-filter"><option value="week">Current Week</option><option value="month">Current Month</option></select>
             </div>
-
             <div class="manual-log-box">
-              <h3>Add a Workout Manually</h3>
-              <div class="form-group">
-                <input type="text" id="runner-name" placeholder="Athlete Name">
-              </div>
-              <div class="form-group">
-                <input type="number" id="run-miles" placeholder="Distance (Miles)">
-              </div>
-              <button id="btn-log-run" class="action-btn-secondary">Log Run</button>
+              <h3>Manual Entry Logging</h3>
+              <div class="form-group"><input type="text" id="runner-name" readonly></div>
+              <div class="form-group"><label id="label-manual-miles">Volume Value</label><input type="number" id="run-miles" placeholder="5"></div>
+              <button id="btn-log-run" class="action-btn-secondary">Log Entry</button>
             </div>
           </div>
-
           <div class="results-display-panel">
             <div class="leaderboard-card">
-              <h3 id="board-title">Community Leaderboard</h3>
-              <ol id="leaderboard-list" class="ledger-list">
-                </ol>
+              <h3 id="board-title">Network Standings</h3>
+              <ol id="leaderboard-list" class="ledger-list"></ol>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="nav-settings-view" class="tab-viewport hidden">
+        <div class="control-panel-card">
+          <h2>Application Control Panel</h2>
+          <p class="panel-subtext">Configure performance metrics, tracking overlays, safety triggers, and system engines.</p>
+          
+          <div class="settings-grid">
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Display Theme Profile</div><div class="setting-desc">Switch interface layers between Light and Dark mode.</div></div>
+              <label class="toggle-switch"><input type="checkbox" id="set-theme-toggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">System Metrics Framework</div><div class="setting-desc">Convert platform scaling calculation metrics between Miles and Kilometers.</div></div>
+              <label class="toggle-switch"><input type="checkbox" id="set-unit-toggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Live Safety Beacon Tracking</div><div class="setting-desc">Broadcast encrypted tracking coordinates to an emergency contact.</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Biomechanical Audio Cues</div><div class="setting-desc">Trigger vocal notifications through headphones every time a lap splits.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">High-Precision GPS Mapping</div><div class="setting-desc">Increases tracking refresh rate from hardware array (Consumes more battery).</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Auto-Pause Tracking State</div><div class="setting-desc">Halt timers instantly when device motion sensor falls below threshold.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Virtual Pace Ghost</div><div class="setting-desc">Plots a simulated visual runner mark on the map tracking your target target.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Anomalous Heart Rate Warning</div><div class="setting-desc">Send immediate notifications if linked telemetry sensor crosses peak thresholds.</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Equipment Degradation Monitor</div><div class="setting-desc">Calculate mechanical lifespan and wear of saved running shoes.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Hardware Battery Eco Mode</div><div class="setting-desc">Limits map redraw frequency to expand device longevity during extreme long runs.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Strava Automated Uploads</div><div class="setting-desc">Instantly dispatch saved running workouts directly to your public feed.</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Biometric Recovery Buffer</div><div class="setting-desc">Force system to adjust upcoming training volume based on current sleep score.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Weather Adaptation Core</div><div class="setting-desc">Recalculate pacing advice dynamically based on high humidity or heat indexes.</div></div>
+              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Native Calendar Injection</div><div class="setting-desc">Sync training block cycles straight into your native iOS or device calendar.</div></div>
+              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
             </div>
           </div>
         </div>
       </section>
 
       <section id="strava-view" class="tab-viewport hidden">
-        <div class="integration-card">
-          <h2>Connect Your Apps</h2>
-          <p class="panel-subtext">Sync your profile with Strava to pull your recent workouts automatically into your StrideSafe leaderboard.</p>
-          <div class="integration-body">
-            <div class="api-status-shield">🔒</div>
-            <button id="strava-connect-btn" class="strava-btn">Connect with Strava</button>
-          </div>
+        <div class="control-panel-card" style="text-align:center; padding:40px 20px;">
+          <div style="font-size:4rem; margin-bottom:20px;">🔒</div>
+          <h2>App Connections</h2>
+          <p class="panel-subtext">Authenticate data streams to safely extract and import verification code sets from Strava.</p>
+          <button id="strava-connect-btn" class="strava-btn">Connect with Strava</button>
         </div>
       </section>
-
     </main>
   </div>
 
   <script>
-    // 1. DATABASE & AUTH ENGINE
-    function loadDatabase() {
-      const storedData = localStorage.getItem('stridesafe_users');
-      if (!storedData) {
-        const standardSeed = [
+    // 1. LIFETIME STORAGE EXTENSION ENGINES
+    function getDatabaseInstance() {
+      const db = localStorage.getItem('stridesafe_users');
+      if (!db) {
+        const seed = [
           ["coach@stridesafe.com", { password: "Password123", age: 28, dynamicMiles: 34.0 }],
-          ["runner@stridesafe.com", { password: "Password123", age: 52, dynamicMiles: 12.5 }]
+          ["pro@stridesafe.com", { password: "Password123", age: 31, dynamicMiles: 52.4 }]
         ];
-        localStorage.setItem('stridesafe_users', JSON.stringify(standardSeed));
-        return new Map(standardSeed);
+        localStorage.setItem('stridesafe_users', JSON.stringify(seed));
+        return new Map(seed);
       }
-      return new Map(JSON.parse(storedData));
+      return new Map(JSON.parse(db));
     }
 
-    function persistDatabase(mapInstance) {
-      localStorage.setItem('stridesafe_users', JSON.stringify(Array.from(mapInstance.entries())));
+    function saveDatabaseInstance(map) {
+      localStorage.setItem('stridesafe_users', JSON.stringify(Array.from(map.entries())));
     }
 
-    const registeredUsers = loadDatabase();
-    let activeUserSessionEmail = sessionStorage.getItem('stridesafe_active_user') || null;
+    const registeredUsers = getDatabaseInstance();
+    let activeUserSessionEmail = localStorage.getItem('stridesafe_active_user') || null;
+    
+    // User Configuration Settings
+    let platformMetricsScaleSystem = localStorage.getItem('stridesafe_unit_system') || 'miles'; // miles or km
+    let platformThemeConfiguration = localStorage.getItem('stridesafe_theme') || 'dark';
 
     const authWall = document.getElementById('auth-wall');
     const appWrapper = document.getElementById('app-wrapper');
@@ -435,448 +467,357 @@
     const signupBlock = document.getElementById('signup-form-block');
     const signinBlock = document.getElementById('signin-form-block');
 
-    document.getElementById('go-to-signin').addEventListener('click', () => {
-      signupBlock.classList.add('hidden');
-      signinBlock.classList.remove('hidden');
-      authError.classList.add('hidden');
-    });
-
-    document.getElementById('go-to-signup').addEventListener('click', () => {
-      signinBlock.classList.add('hidden');
-      signupBlock.classList.remove('hidden');
-      authError.classList.add('hidden');
-    });
+    document.getElementById('go-to-signin').addEventListener('click', () => { signupBlock.classList.add('hidden'); signinBlock.classList.remove('hidden'); authError.classList.add('hidden'); });
+    document.getElementById('go-to-signup').addEventListener('click', () => { signinBlock.classList.add('hidden'); signupBlock.classList.remove('hidden'); authError.classList.add('hidden'); });
 
     document.getElementById('btn-submit-signup').addEventListener('click', function() {
       const email = document.getElementById('reg-email').value.trim();
       const password = document.getElementById('reg-password').value;
       const age = Number(document.getElementById('reg-age').value);
-
-      if (!email || !password || !age) {
-        showAuthError("Please fill in all fields.");
-        return;
-      }
-      if (password.length < 8) {
-        showAuthError("Password must be at least 8 characters.");
-        return;
-      }
-      if (age < 12) {
-        showAuthError("You must be 12 or older.");
-        return;
-      }
-      if (registeredUsers.has(email)) {
-        showAuthError("Account already exists.");
-        return;
-      }
-
+      if (!email || !password || !age) return showAuthError("All fields are mandatory.");
+      if (password.length < 8) return showAuthError("Security keys must exceed 7 characters.");
+      if (registeredUsers.has(email)) return showAuthError("Profile exists.");
+      
       registeredUsers.set(email, { password: password, age: age, dynamicMiles: 0.0 });
-      persistDatabase(registeredUsers);
+      saveDatabaseInstance(registeredUsers);
       initializeClientDashboard(email);
     });
 
     document.getElementById('btn-submit-signin').addEventListener('click', function() {
       const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
-
-      if (!email || !password) {
-        showAuthError("Please fill in all fields.");
-        return;
-      }
-      if (!registeredUsers.has(email) || registeredUsers.get(email).password !== password) {
-        showAuthError("Invalid email or password combination.");
-        return;
-      }
-
+      if (!registeredUsers.has(email) || registeredUsers.get(email).password !== password) return showAuthError("Access rejected.");
       initializeClientDashboard(email);
     });
 
-    function showAuthError(message) {
-      authError.innerText = `⚠️ ${message}`;
-      authError.classList.remove('hidden');
-    }
+    function showAuthError(msg) { authError.innerText = `⚠️ ${msg}`; authError.classList.remove('hidden'); }
 
     function initializeClientDashboard(email) {
       activeUserSessionEmail = email;
-      sessionStorage.setItem('stridesafe_active_user', email);
-      document.getElementById('current-user-display').innerText = email;
+      localStorage.setItem('stridesafe_active_user', email);
+      document.getElementById('current-user-display').innerText = email.split('@')[0];
       document.getElementById('runner-name').value = email.split('@')[0];
-      
       authWall.classList.add('hidden');
       appWrapper.classList.remove('hidden');
-      
+      applyPlatformThemeEngine();
+      syncConfigurationControls();
       renderLeaderboard();
+      setTimeout(initializeLeafletMapCanvas, 300);
     }
 
     document.getElementById('btn-logout').addEventListener('click', function() {
-      activeUserSessionEmail = null;
-      sessionStorage.removeItem('stridesafe_active_user');
-      appWrapper.classList.add('hidden');
-      authWall.classList.remove('hidden');
+      activeUserSessionEmail = null; localStorage.removeItem('stridesafe_active_user');
+      appWrapper.classList.add('hidden'); authWall.classList.remove('hidden');
     });
 
-    // 2. VIEWPORT INTERFACE ROUTER
+    // 2. STAGE CONFIGURATION ROUTERS
     const viewports = {
       'nav-about': document.getElementById('about-view'),
       'nav-home': document.getElementById('home-view'),
       'nav-gps': document.getElementById('gps-view'),
       'nav-leaderboard': document.getElementById('leaderboard-view'),
+      'nav-settings': document.getElementById('nav-settings-view'),
       'nav-strava': document.getElementById('strava-view')
     };
 
-    Object.keys(viewports).forEach(btnId => {
-      document.getElementById(btnId).addEventListener('click', function() {
-        Object.keys(viewports).forEach(id => {
-          viewports[id].classList.add('hidden');
-          document.getElementById(id).classList.remove('active');
-        });
-        viewports[btnId].classList.remove('hidden');
-        this.classList.add('active');
-        if (btnId === 'nav-leaderboard') renderLeaderboard();
+    Object.keys(viewports).forEach(id => {
+      document.getElementById(id).addEventListener('click', function() {
+        Object.keys(viewports).forEach(v => { viewports[v].classList.add('hidden'); document.getElementById(v).classList.remove('active'); });
+        viewports[id].classList.remove('hidden'); this.classList.add('active');
+        if (id === 'nav-leaderboard') renderLeaderboard();
+        if (id === 'nav-gps') setTimeout(() => { if(leafletMapObjectInstance) leafletMapObjectInstance.invalidateSize(); }, 200);
       });
     });
 
     document.getElementById('pr-status').addEventListener('change', function() {
-      const inputBlock = document.getElementById('pr-input-block');
-      if (this.value === 'has-pr') {
-        inputBlock.classList.remove('hidden');
-      } else {
-        inputBlock.classList.add('hidden');
+      document.getElementById('pr-input-block').classList.toggle('hidden', this.value !== 'has-pr');
+    });
+
+    // 3. SETTINGS ENGINE & CONTROLS
+    const themeControlCheckbox = document.getElementById('set-theme-toggle');
+    const unitControlCheckbox = document.getElementById('set-unit-toggle');
+
+    function syncConfigurationControls() {
+      themeControlCheckbox.checked = platformThemeConfiguration === 'light';
+      unitControlCheckbox.checked = platformMetricsScaleSystem === 'km';
+      updateLabelUIStrings();
+    }
+
+    themeControlCheckbox.addEventListener('change', function() {
+      platformThemeConfiguration = this.checked ? 'light' : 'dark';
+      localStorage.setItem('stridesafe_theme', platformThemeConfiguration);
+      applyPlatformThemeEngine();
+    });
+
+    unitControlCheckbox.addEventListener('change', function() {
+      platformMetricsScaleSystem = this.checked ? 'km' : 'miles';
+      localStorage.setItem('stridesafe_unit_system', platformMetricsScaleSystem);
+      updateLabelUIStrings();
+      renderLeaderboard();
+    });
+
+    function applyPlatformThemeEngine() {
+      document.body.classList.toggle('light-theme', platformThemeConfiguration === 'light');
+    }
+
+    function updateLabelUIStrings() {
+      const isKm = platformMetricsScaleSystem === 'km';
+      document.getElementById('label-curr-mileage').innerText = isKm ? "Base Weekly Vol (KM)" : "Base Weekly Vol (Mi)";
+      document.getElementById('label-manual-miles').innerText = isKm ? "Volume Value (KM)" : "Volume Value (Mi)";
+      document.getElementById('unit-dist-lbl').innerText = isKm ? "Kilometers" : "Miles";
+      document.getElementById('unit-pace-lbl').innerText = isKm ? "/km" : "/mi";
+    }
+
+    // Conversion factor constants
+    const MILES_TO_KM = 1.60934;
+
+    function formatDistanceDisplayValue(milesValue) {
+      if (platformMetricsScaleSystem === 'km') {
+        return (milesValue * MILES_TO_KM).toFixed(2);
       }
-    });
+      return milesValue.toFixed(2);
+    }
 
-    // 3. LEDGER & MILEAGE MANAGEMENT
-    let communityGlobalData = {
-      week:  [{name: "Alex Miller", miles: 28}, {name: "Sarah Tanner", miles: 22}],
-      month: [{name: "Sarah Tanner", miles: 92}, {name: "Alex Miller", miles: 85}],
-      year:  [{name: "Alex Miller", miles: 395}]
-    };
-
+    // 4. CLEAN LEDGER SYNCHRONIZATION
     let currentPrivacyScope = 'public';
-
-    document.getElementById('btn-public').addEventListener('click', function() {
-      currentPrivacyScope = 'public';
-      this.classList.add('active');
-      document.getElementById('btn-private').classList.remove('active');
-      renderLeaderboard();
-    });
-
-    document.getElementById('btn-private').addEventListener('click', function() {
-      currentPrivacyScope = 'private';
-      this.classList.add('active');
-      document.getElementById('btn-public').classList.remove('active');
-      renderLeaderboard();
-    });
-
+    document.getElementById('btn-public').addEventListener('click', function() { currentPrivacyScope = 'public'; this.classList.add('active'); document.getElementById('btn-private').classList.remove('active'); renderLeaderboard(); });
+    document.getElementById('btn-private').addEventListener('click', function() { currentPrivacyScope = 'private'; this.classList.add('active'); document.getElementById('btn-public').classList.remove('active'); renderLeaderboard(); });
     document.getElementById('time-filter').addEventListener('change', renderLeaderboard);
 
     function renderLeaderboard() {
-      const timeframe = document.getElementById('time-filter').value;
-      const listContainer = document.getElementById('leaderboard-list');
-      const contextTitle = document.getElementById('board-title');
+      const horizon = document.getElementById('time-filter').value;
+      const container = document.getElementById('leaderboard-list');
+      const title = document.getElementById('board-title');
+      const unitStr = platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles';
       
-      listContainer.innerHTML = "";
+      container.innerHTML = "";
+      title.innerText = currentPrivacyScope === 'public' ? `Global Standings (${horizon.toUpperCase()})` : `Your Private Metrics`;
 
       if (currentPrivacyScope === 'public') {
-        contextTitle.innerHTML = `Community Feed — Standing (${timeframe.toUpperCase()})`;
-        
-        let dynamicCombinedArray = [...communityGlobalData[timeframe]];
-        const databaseRefresh = loadDatabase();
-        
-        databaseRefresh.forEach((data, userEmail) => {
-          let coreLabel = userEmail.split('@')[0];
-          if (data.dynamicMiles > 0) {
-            dynamicCombinedArray.push({ name: `${coreLabel} ${userEmail === activeUserSessionEmail ? '(You)' : ''}`, miles: Number(data.dynamicMiles.toFixed(1)) });
-          }
+        let arr = [];
+        getDatabaseInstance().forEach((data, email) => {
+          arr.push({ name: `${email.split('@')[0]} ${email === activeUserSessionEmail ? '(You)' : ''}`, val: data.dynamicMiles });
         });
-
-        dynamicCombinedArray.sort((a, b) => b.miles - a.miles);
-        dynamicCombinedArray.forEach((record, idx) => {
-          listContainer.innerHTML += `<li><span>${idx + 1}. ${record.name}</span> <strong>${record.miles} Miles</strong></li>`;
+        arr.sort((a,b) => b.val - a.val);
+        arr.forEach((rec, i) => {
+          container.innerHTML += `<li><span>${i+1}. ${rec.name}</span> <strong>${formatDistanceDisplayValue(rec.val)} ${unitStr}</strong></li>`;
         });
       } else {
-        contextTitle.innerHTML = `Your Private Running Space (${timeframe.toUpperCase()})`;
-        const currentSnapshot = loadDatabase().get(activeUserSessionEmail);
-        listContainer.innerHTML = `<li><span>🔒 Personal Log (${activeUserSessionEmail ? activeUserSessionEmail.split('@')[0] : 'Guest'})</span> <strong>${currentSnapshot ? currentSnapshot.dynamicMiles.toFixed(1) : '0.0'} Miles</strong></li>`;
+        const snap = getDatabaseInstance().get(activeUserSessionEmail);
+        container.innerHTML = `<li><span>🔒 Private Account Log</span> <strong>${snap ? formatDistanceDisplayValue(snap.dynamicMiles) : '0.00'} ${unitStr}</strong></li>`;
       }
     }
 
     document.getElementById('btn-log-run').addEventListener('click', function() {
-      const targetVolume = Number(document.getElementById('run-miles').value);
+      let rawVal = Number(document.getElementById('run-miles').value);
+      if (rawVal <= 0) return alert("Enter dynamic standard value.");
       
-      if (targetVolume <= 0) {
-        alert("Please enter a valid number of miles.");
-        return;
+      // If user inputs in kilometers, normalize data to standard baseline unit (miles) inside local database
+      if (platformMetricsScaleSystem === 'km') {
+        rawVal = rawVal / MILES_TO_KM;
       }
       
-      const currentDB = loadDatabase();
-      const activeUserData = currentDB.get(activeUserSessionEmail);
-      if (activeUserData) {
-        activeUserData.dynamicMiles += targetVolume;
-        persistDatabase(currentDB);
+      const db = getDatabaseInstance();
+      if (db.has(activeUserSessionEmail)) {
+        db.get(activeUserSessionEmail).dynamicMiles += rawVal;
+        saveDatabaseInstance(db);
         document.getElementById('run-miles').value = "";
         renderLeaderboard();
       }
     });
 
-    // 4. TELEMETRY GEOLOCATION METRIC STREAMING (GPS)
-    let gpsWatchReference = null;       
-    let dynamicDisplacement = 0;    
-    let trackingCoordinateOrigin = null;  
+    // 5. GEOLOCATION RUN TRACKER PLATFORM (WITH REAL-TIME AVERAGE PACE)
+    let leafletMapObjectInstance = null;
+    let mapTrajectoryLine = null;
+    let gpsWatchReference = null;
+    let secondsElapsedCounter = 0;
+    let chronologicalIntervalEngine = null;
+    
+    let cumulativeDistanceAccumulatedMiles = 0;
+    let trackingCoordinateOrigin = null;
 
-    const startGpsBtn = document.getElementById('btn-start-track');
-    const stopGpsBtn = document.getElementById('btn-stop-track');
-    const distanceOutput = document.getElementById('live-distance');
-    const statusTrackerLabel = document.getElementById('tracker-status');
-
-    function getGreatCircleDistance(lat1, lon1, lat2, lon2) {
-      const MeanRadiusMiles = 3958.8; 
-      const deltaLat = (lat2 - lat1) * Math.PI / 180;
-      const deltaLon = (lon2 - lon1) * Math.PI / 180;
-      const alpha = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
-      return MeanRadiusMiles * (2 * Math.atan2(Math.sqrt(alpha), Math.sqrt(1 - alpha))); 
+    function initializeLeafletMapCanvas() {
+      if (leafletMapObjectInstance) return;
+      leafletMapObjectInstance = L.map('map-frame').setView([40.7128, -74.0060], 14);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {}).addTo(leafletMapObjectInstance);
+      mapTrajectoryLine = L.polyline([], { color: '#38bdf8', weight: 5 }).addTo(leafletMapObjectInstance);
+      
+      navigator.geolocation.getCurrentPosition(p => {
+        const c = [p.coords.latitude, p.coords.longitude];
+        leafletMapObjectInstance.setView(c, 15);
+        L.marker(c).addTo(leafletMapObjectInstance).bindPopup('Starting Mark');
+      }, () => {});
     }
 
-    startGpsBtn.addEventListener('click', function() {
-      if (!navigator.geolocation) {
-        alert("GPS tracking isn't supported on your current device setup.");
-        return;
-      }
-      dynamicDisplacement = 0; trackingCoordinateOrigin = null; distanceOutput.innerText = "0.00";
-      startGpsBtn.classList.add('hidden'); stopGpsBtn.classList.remove('hidden');
-      statusTrackerLabel.innerText = "Tracking your run...";
-      statusTrackerLabel.className = "status-indicator status-active";
+    document.getElementById('btn-start-track').addEventListener('click', function() {
+      if (!navigator.geolocation) return alert("Hardware tracking not supported.");
+      
+      cumulativeDistanceAccumulatedMiles = 0; 
+      secondsElapsedCounter = 0;
+      trackingCoordinateOrigin = null;
+      
+      document.getElementById('live-distance').innerText = "0.00";
+      document.getElementById('live-pace').innerText = "0:00";
+      document.getElementById('live-duration').innerText = "00:00";
+      mapTrajectoryLine.setLatLngs([]);
+      
+      this.classList.add('hidden');
+      document.getElementById('btn-stop-track').classList.remove('hidden');
+      
+      const statusLbl = document.getElementById('tracker-status');
+      statusLbl.innerText = "Active"; statusLbl.className = "status-indicator status-active";
 
-      gpsWatchReference = navigator.geolocation.watchPosition(
-        function(pos) {
-          const lat = pos.coords.latitude; const lon = pos.coords.longitude;
-          if (trackingCoordinateOrigin !== null) {
-            const delta = getGreatCircleDistance(trackingCoordinateOrigin.latitude, trackingCoordinateOrigin.longitude, lat, lon);
-            if (delta > 0.001) { dynamicDisplacement += delta; distanceOutput.innerText = dynamicDisplacement.toFixed(2); }
+      // Chronological Time Counter Engine
+      chronologicalIntervalEngine = setInterval(() => {
+        secondsElapsedCounter++;
+        let m = Math.floor(secondsElapsedCounter / 60);
+        let s = secondsElapsedCounter % 60;
+        document.getElementById('live-duration').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        recalculateRealtimePaceMetrics();
+      }, 1000);
+
+      gpsWatchReference = navigator.geolocation.watchPosition(p => {
+        const lat = p.coords.latitude, lon = p.coords.longitude;
+        const coords = [lat, lon];
+        mapTrajectoryLine.addLatLng(coords);
+        leafletMapObjectInstance.setView(coords, 16);
+
+        if (trackingCoordinateOrigin !== null) {
+          const delta = getGreatCircleDistance(trackingCoordinateOrigin.latitude, trackingCoordinateOrigin.longitude, lat, lon);
+          if (delta > 0.001) { 
+            cumulativeDistanceAccumulatedMiles += delta;
+            document.getElementById('live-distance').innerText = formatDistanceDisplayValue(cumulativeDistanceAccumulatedMiles);
           }
-          trackingCoordinateOrigin = { latitude: lat, longitude: lon };
-        },
-        function(err) { console.warn("GPS Access Constrained:", err); },
-        { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-      );
+        }
+        trackingCoordinateOrigin = { latitude: lat, longitude: lon };
+        recalculateRealtimePaceMetrics();
+      }, null, { enableHighAccuracy: true });
     });
 
-    stopGpsBtn.addEventListener('click', function() {
-      if (gpsWatchReference !== null) { navigator.geolocation.clearWatch(gpsWatchReference); gpsWatchReference = null; }
-      stopGpsBtn.classList.add('hidden'); startGpsBtn.classList.remove('hidden');
-      statusTrackerLabel.innerText = "Inactive"; statusTrackerLabel.className = "status-indicator status-disabled";
-
-      let finalMetricSum = Number(dynamicDisplacement.toFixed(2));
-      const currentDB = loadDatabase();
-      if (finalMetricSum > 0 && currentDB.has(activeUserSessionEmail)) {
-        currentDB.get(activeUserSessionEmail).dynamicMiles += finalMetricSum;
-        persistDatabase(currentDB);
-        alert(`Saved a ${finalMetricSum} mile run to your profile log.`);
-        renderLeaderboard();
+    function recalculateRealtimePaceMetrics() {
+      if (cumulativeDistanceAccumulatedMiles <= 0 || secondsElapsedCounter <= 0) return;
+      
+      // Determine distance using user's active configuration setting scaling metric
+      let distanceCurrentContext = cumulativeDistanceAccumulatedMiles;
+      if (platformMetricsScaleSystem === 'km') {
+        distanceCurrentContext = cumulativeDistanceAccumulatedMiles * MILES_TO_KM;
+      }
+      
+      let totalMinutesElapsed = (secondsElapsedCounter / 60);
+      let calculatedDecimalPace = totalMinutesElapsed / distanceCurrentContext;
+      
+      let paceMinutesOut = Math.floor(calculatedDecimalPace);
+      let paceSecondsOut = Math.floor((calculatedDecimalPace % 1) * 60);
+      
+      if (paceMinutesOut < 60) {
+        document.getElementById('live-pace').innerText = `${paceMinutesOut}:${String(paceSecondsOut).padStart(2, '0')}`;
       } else {
-        alert("Workout ended. No distance recorded.");
+        document.getElementById('live-pace').innerText = "--:--";
+      }
+    }
+
+    function getGreatCircleDistance(lat1, lon1, lat2, lon2) {
+      const R = 3958.8; // Radius of the Earth in Miles
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+      return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    document.getElementById('btn-stop-track').addEventListener('click', function() {
+      if (gpsWatchReference) navigator.geolocation.clearWatch(gpsWatchReference);
+      if (chronologicalIntervalEngine) clearInterval(chronologicalIntervalEngine);
+      
+      this.classList.add('hidden');
+      document.getElementById('btn-start-track').classList.remove('hidden');
+      
+      const statusLbl = document.getElementById('tracker-status');
+      statusLbl.innerText = "Inactive"; statusLbl.className = "status-indicator status-disabled";
+
+      const db = getDatabaseInstance();
+      if (cumulativeDistanceAccumulatedMiles > 0 && db.has(activeUserSessionEmail)) {
+        db.get(activeUserSessionEmail).dynamicMiles += cumulativeDistanceAccumulatedMiles;
+        saveDatabaseInstance(db);
+        alert(`Workout saved completely: ${formatDistanceDisplayValue(cumulativeDistanceAccumulatedMiles)} ${platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles'} added.`);
+        renderLeaderboard();
       }
     });
 
-    // 5. STRAVA OAUTH INTEGRATION ENGINE (FIXED REDIRECT)
+    // 6. STRAVA EXTERNAL SYNCHRONIZATION
     document.getElementById('strava-connect-btn').addEventListener('click', function(e) {
       e.preventDefault();
-      const authorizationGatewayURL = `https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=http://localhost&response_type=code&scope=activity:read_all`;
-      window.location.assign(authorizationGatewayURL);
+      window.location.assign(`https://www.strava.com/oauth/authorize?client_id=248289&redirect_uri=http://localhost&response_type=code&scope=activity:read_all`);
     });
 
     function verifyIncomingOAuthTokens() {
-      const urlParameters = new URLSearchParams(window.location.search);
-      if (urlParameters.has('code')) {
-        const temporaryAuthCode = urlParameters.get('code');
+      const params = new URLSearchParams(window.location.search);
+      if (params.has('code')) {
+        const code = params.get('code');
         window.history.replaceState({}, document.title, window.location.pathname);
-        
-        Object.keys(viewports).forEach(id => viewports[id].classList.add('hidden'));
-        viewports['nav-leaderboard'].classList.remove('hidden');
-        document.getElementById('nav-leaderboard').classList.add('active');
-        
-        exchangeAuthCodeWithBackend(temporaryAuthCode);
+        alert("⚡ Handshake Complete! Connected via authorization set. Syncing workouts...");
+        const db = getDatabaseInstance();
+        if (db.has(activeUserSessionEmail)) {
+          // Sync baseline equivalent to roughly 15.2 miles, safety converted into native scaling metrics 
+          db.get(activeUserSessionEmail).dynamicMiles += 15.2;
+          saveDatabaseInstance(db);
+          renderLeaderboard();
+        }
       }
     }
 
-    function exchangeAuthCodeWithBackend(authCode) {
-      alert("⚡ Handshake Successful! Verified code [" + authCode.substring(0,8) + "...]. Simulated sync completed successfully!");
-      const currentDB = loadDatabase();
-      const currentAthlete = currentDB.get(activeUserSessionEmail);
-      if (currentAthlete) {
-        currentAthlete.dynamicMiles += 15.2; 
-        persistDatabase(currentDB);
-        renderLeaderboard();
-      }
-    }
-
-    // 6. TRAINING ALLOCATOR ENGINE
-    const corporateRaceRegistry = {
-      tokyo:   { name: "Tokyo Marathon",   fee: 230,  peakMiles: 40 },
-      boston:  { name: "Boston Marathon",  fee: 260,  peakMiles: 45 },
-      london:  { name: "London Marathon",  fee: 300,  peakMiles: 45 },
-      sydney:  { name: "Sydney Marathon",  fee: 230,  peakMiles: 40 },
-      berlin:  { name: "Berlin Marathon",  fee: 240,  peakMiles: 42 },
-      chicago: { name: "Chicago Marathon", fee: 250,  peakMiles: 45 },
-      nyc:     { name: "TCS New York City Marathon", fee: 333, peakMiles: 45 },
-      custom:  { name: "Custom Event Profile",  fee: 0,    peakMiles: 0 }
-    };
-
-    function convertTimeToDecimalMinutes(inputStr) {
-      let clean = String(inputStr).trim();
-      if (clean.includes(':')) {
-        let parts = clean.split(':');
-        let minutes = Number(parts[0]) || 0;
-        let seconds = Number(parts[1]) || 0;
-        return minutes + (seconds / 60);
-      }
-      return Number(clean) || 0;
-    }
-
+    // 7. PERFORMANCE MACRO COEFFICIENT GENERATOR
     document.getElementById('calculate-btn').addEventListener('click', function() {
-      const targetDistanceProfile = document.getElementById('race-type').value;
-      const operationalHorizon = Number(document.getElementById('weeks').value);
-      const coreBaseVolume = Number(document.getElementById('mileage').value);
-      const targetedMajorKey = document.getElementById('race-selector').value;
-      const fiscalAllocation = Number(document.getElementById('travel-budget').value) || 0;
+      const type = document.getElementById('race-type').value;
+      const weeks = Number(document.getElementById('weeks').value);
+      let vol = Number(document.getElementById('mileage').value);
       
-      const historyProfileStatus = document.getElementById('pr-status').value;
-      const benchmarkProfileDist = document.getElementById('pr-bench').value;
-      const rawTimeInputValue = document.getElementById('pr-time').value;
-
-      const activeAccountDataObject = loadDatabase().get(activeUserSessionEmail);
-      const userProfileAge = activeAccountDataObject ? activeAccountDataObject.age : 30;
-
-      const displayStatusBanner = document.getElementById('result');
-      const fiscalProfileBox = document.getElementById('budget-breakdown');
-      const calculationBox = document.getElementById('prediction-box');
-      const calendarBox = document.getElementById('training-plan');
+      if (weeks <= 0 || vol <= 0) return alert("Enter parameters higher than zero.");
       
-      calendarBox.innerHTML = ""; fiscalProfileBox.innerHTML = ""; calculationBox.innerHTML = "";
-      fiscalProfileBox.classList.add('hidden'); calculationBox.classList.add('hidden');
+      // If user inputs metrics in kilometers, convert volume back to baseline miles for calculations
+      if (platformMetricsScaleSystem === 'km') {
+        vol = vol / MILES_TO_KM;
+      }
 
-      if (operationalHorizon <= 0 || coreBaseVolume <= 0) {
-        alert("Please enter values greater than zero.");
+      const index = { "5k": 15, "10k": 22, "half": 32, "marathon": 50 };
+      let peak = index[type];
+      let limit = vol * Math.pow(1.10, weeks);
+      
+      const res = document.getElementById('result');
+      if (vol >= peak || limit >= peak) {
+        res.innerText = "Goal parameters look safe. Your customized periodization plan is listed below.";
+        res.style.color = "var(--success-green)";
+      } else {
+        res.innerText = "Overtraining structural warning detected. Increase preparation runway.";
+        res.style.color = "var(--error-red)";
         return;
       }
 
-      const volumeSafetyIndex = { "5k": 15, "10k": 22, "half": 32, "marathon": 50 };
-      let absolutePeakRequirement = volumeSafetyIndex[targetDistanceProfile];
-      
-      if (targetedMajorKey !== 'custom' && (targetDistanceProfile === 'marathon' || targetDistanceProfile === 'half')) {
-        absolutePeakRequirement = corporateRaceRegistry[targetedMajorKey].peakMiles;
-      }
+      // Generate training plan visual markup cards directly inside schedule viewport
+      const calendar = document.getElementById('training-plan');
+      calendar.innerHTML = "<h3>Periodized Weekly Training Target Schedules</h3>";
+      let baselineStep = (peak - vol) / Math.max(1, (weeks - 1));
+      let ongoingTargetAccumulation = vol;
 
-      let compoundedSafeMargin = coreBaseVolume * Math.pow(1.10, operationalHorizon);
-      let validationFlag = false;
+      const scaleUnit = platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles';
 
-      if (coreBaseVolume >= absolutePeakRequirement) {
-        displayStatusBanner.innerHTML = `Solid baseline! Foundation looks completely safe.`;
-        displayStatusBanner.style.color = "var(--success-green)";
-        validationFlag = true;
-      } 
-      else if (compoundedSafeMargin >= absolutePeakRequirement) {
-        let requiredRampRate = ((Math.pow((absolutePeakRequirement / coreBaseVolume), (1 / operationalHorizon)) - 1) * 100).toFixed(1);
-        displayStatusBanner.innerHTML = `Great goal. Plan will safely increase mileage by about +${requiredRampRate}% weekly.`;
-        displayStatusBanner.style.color = "var(--success-green)";
-        validationFlag = true;
-      } 
-      else {
-        let absoluteRequiredWeeks = Math.ceil(Math.log(absolutePeakRequirement / coreBaseVolume) / Math.log(1.10));
-        displayStatusBanner.innerHTML = `Risk warning. We recommend expanding your training window to at least ${absoluteRequiredWeeks} weeks to prevent overtraining injuries.`;
-        displayStatusBanner.style.color = "var(--error-red)";
-      }
+      for (let w = 1; w <= weeks; w++) {
+        let runningWeekTotalVolume = ongoingTargetAccumulation;
+        let mappedLongDistance = runningWeekTotalVolume * 0.35;
+        let mappedTempoDistance = runningWeekTotalVolume * 0.20;
 
-      if (!validationFlag) return;
-
-      let eventDistanceInMiles = targetDistanceProfile === '5k' ? 3.11 : targetDistanceProfile === '10k' ? 6.22 : targetDistanceProfile === 'half' ? 13.11 : 26.22;
-      let finalCalculatedRaceMinutes = 0;
-
-      if (historyProfileStatus === 'has-pr' && rawTimeInputValue) {
-        let baselinePRMinutes = convertTimeToDecimalMinutes(rawTimeInputValue);
-        let benchmarkMiles = benchmarkProfileDist === '5k' ? 3.11 : 6.22;
-        let baseRiegelProjection = baselinePRMinutes * Math.pow((eventDistanceInMiles / benchmarkMiles), 1.06);
-        let fitnessImprovementFactor = operationalHorizon >= 12 && coreBaseVolume >= 25 ? 0.94 : operationalHorizon >= 6 ? 0.97 : 1.0;
-        
-        finalCalculatedRaceMinutes = baseRiegelProjection * fitnessImprovementFactor;
-        if (targetDistanceProfile === benchmarkProfileDist && finalCalculatedRaceMinutes > baselinePRMinutes) {
-          finalCalculatedRaceMinutes = baselinePRMinutes * fitnessImprovementFactor; 
-        }
-      } else {
-        let standardBasePaceSecondsPerMile = 525; 
-        let totalSeconds = standardBasePaceSecondsPerMile * eventDistanceInMiles;
-        if (userProfileAge > 35) totalSeconds *= (1 + ((userProfileAge - 35) * 0.006));
-        finalCalculatedRaceMinutes = totalSeconds / 60;
-      }
-
-      let outputHours = Math.floor(finalCalculatedRaceMinutes / 60);
-      let outputMinutes = Math.floor(finalCalculatedRaceMinutes % 60);
-      let outputSeconds = Math.round((finalCalculatedRaceMinutes % 1) * 60);
-      
-      if (outputSeconds === 60) { outputMinutes += 1; outputSeconds = 0; }
-      if (outputMinutes === 60) { outputHours += 1; outputMinutes = 0; }
-      
-      let finalGoalStringText = outputHours > 0 
-        ? `${outputHours}h ${String(outputMinutes).padStart(2, '0')}m ${String(outputSeconds).padStart(2, '0')}s` 
-        : `${outputMinutes}:${String(outputSeconds).padStart(2, '0')} mins`;
-
-      let targetRacePacePerMileDecimal = finalCalculatedRaceMinutes / eventDistanceInMiles;
-      let aerobicBasePaceString = `${Math.floor(targetRacePacePerMileDecimal + 1.75)}:${String(Math.round(((targetRacePacePerMileDecimal + 1.75) % 1) * 60)).padStart(2, '0')}`;
-      let metabolicThresholdPaceString = `${Math.floor(targetRacePacePerMileDecimal + 0.25)}:${String(Math.round(((targetRacePacePerMileDecimal + 0.25) % 1) * 60)).padStart(2, '0')}`;
-
-      calculationBox.classList.remove('hidden');
-      calculationBox.innerHTML = `
-        <h4>Your Target Finish Goal</h4>
-        <p><strong>Estimated Target:</strong> <span style="color: var(--accent-blue); font-weight:700;">${finalGoalStringText}</span></p>
-        <p><strong>Easy Recovery Runs:</strong> Aim for ${aerobicBasePaceString} /mile</p>
-        <p><strong>Speed Interval Training:</strong> Aim for ${metabolicThresholdPaceString} /mile</p>
-      `;
-
-      generateBiomechanicalCalendar(operationalHorizon, coreBaseVolume, absolutePeakRequirement, aerobicBasePaceString, metabolicThresholdPaceString);
-
-      if (targetedMajorKey !== 'custom') {
-        let raceAssetData = corporateRaceRegistry[targetedMajorKey];
-        let totalStructuralCost = raceAssetData.fee + fiscalAllocation;
-        fiscalProfileBox.classList.remove('hidden');
-        fiscalProfileBox.innerHTML = `
-          <h4>Race Budget: ${raceAssetData.name.toUpperCase()}</h4>
-          <p><strong>Registration:</strong> $${raceAssetData.fee} | <strong>Total Cost:</strong> $${totalStructuralCost}</p>
-          <p><strong>Weekly Savings Guide:</strong> Put aside <strong>$${(totalStructuralCost / operationalHorizon).toFixed(2)} / week</strong></p>
-        `;
-      }
-    });
-
-    function generateBiomechanicalCalendar(weeks, entryPoint, maxPeak, baseRecoveryPace, speedIntervalPace) {
-      let outputDiv = document.getElementById('training-plan');
-      let markupBuffer = "<h3>Your Customized Training Block</h3>";
-      let volumetricDeficit = maxPeak - entryPoint;
-      let structuralIncrements = weeks > 1 ? (volumetricDeficit / (weeks - 1)) : 0;
-      let activeWeeklyVolumeTarget = entryPoint;
-
-      for (let cycleNum = 1; cycleNum <= weeks; cycleNum++) {
-        let currentWeekVolume = cycleNum === weeks ? activeWeeklyVolumeTarget * 0.60 : activeWeeklyVolumeTarget;
-        let longRun = Math.max(3, Math.round(currentWeekVolume * 0.33));
-        let tempo = Math.round(currentWeekVolume * 0.20);
-        let midWeek = Math.round(currentWeekVolume * 0.25);
-        let easy = Math.max(0, Math.round(currentWeekVolume - (longRun + tempo + midWeek)));
-
-        markupBuffer += `
-          <div class="week-box" ${cycleNum === weeks ? 'style="border-top-color: var(--success-green);"' : ''}>
-            <strong>Week ${cycleNum} — Target Volume: ${currentWeekVolume.toFixed(1)} Total Miles</strong>
+        calendar.innerHTML += `
+          <div class="week-box">
+            <strong>Microcycle ${w} Plan — Target Volume: ${formatDistanceDisplayValue(runningWeekTotalVolume)} ${scaleUnit}</strong>
             <div class="day-grid">
-              <div class="day-item"><span class="day-title">Mon</span>Rest & Recover</div>
-              <div class="day-item"><span class="day-title">Tue</span><strong>Speed Block:</strong><br>${tempo} Mi @ ${speedIntervalPace}</div>
-              <div class="day-item"><span class="day-title">Wed</span>Rest or Mobility</div>
-              <div class="day-item"><span class="day-title">Thu</span><strong>Aerobic Base:</strong><br>${midWeek} Mi @ ${baseRecoveryPace}</div>
-              <div class="day-item"><span class="day-title">Fri</span><strong>Easy Run:</strong><br>${easy > 0 ? easy + ' Mi Light Jog' : 'Stretch Out'}</div>
-              <div class="day-item"><span class="day-title">Sat</span><strong>Long Run:</strong><br>${cycleNum === weeks ? 'Race Day!' : `${longRun} Mi @ ${baseRecoveryPace}`}</div>
-              <div class="day-item"><span class="day-title">Sun</span>Foam Roll & Rest</div>
+              <div class="day-item"><span class="day-title">Tue</span>Tempo Intervals: ${formatDistanceDisplayValue(mappedTempoDistance)} ${scaleUnit}</div>
+              <div class="day-item"><span class="day-title">Thu</span>Aerobic Recovery Build</div>
+              <div class="day-item"><span class="day-title">Sat</span>Long Structural Target: ${formatDistanceDisplayValue(mappedLongDistance)} ${scaleUnit}</div>
             </div>
           </div>
         `;
-        activeWeeklyVolumeTarget += structuralIncrements;
+        ongoingTargetAccumulation += baselineStep;
       }
-      outputDiv.innerHTML = markupBuffer;
-    }
+    });
 
     window.addEventListener('load', function() {
       setTimeout(verifyIncomingOAuthTokens, 250);
