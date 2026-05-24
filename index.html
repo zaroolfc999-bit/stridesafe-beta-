@@ -38,6 +38,7 @@
       transition: background-color 0.3s, color 0.3s;
     }
 
+    /* FIXED DISPLAY UTILITY */
     .hidden { display: none !important; }
 
     /* MOBILE-FIRST AUTHENTICATION OVERLAY */
@@ -146,13 +147,17 @@
     .content-container { padding: 16px; max-width: 100%; box-sizing: border-box; }
     .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
     
-    .info-card, .control-panel-card, .telemetry-card, .leaderboard-card {
+    .info-card, .control-panel-card, .telemetry-card, .leaderboard-card, .editorial-hero {
       background: var(--card-dark);
-      padding: 20px;
+      padding: 24px;
       border-radius: 14px;
       border: 1px solid var(--border-color);
       box-sizing: border-box;
+      margin-bottom: 16px;
     }
+    .editorial-hero h1 { margin-top: 0; font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; }
+    .editorial-hero .lead-text { color: var(--text-slate); font-size: 1.1rem; line-height: 1.6; margin-bottom: 0; }
+
     .panel-subtext { color: var(--text-slate); font-size: 0.85rem; margin-top: -4px; margin-bottom: 20px; }
     .results-display-panel { display: flex; flex-direction: column; gap: 16px; }
     .status-banner { padding: 16px; background: var(--bg-dark); border-left: 4px solid var(--accent-blue); border-radius: 8px; font-size: 0.95rem; }
@@ -199,7 +204,6 @@
     .segment-btn.active { background: var(--accent-blue); color: #0f172a; border-color: var(--accent-blue); }
     .ledger-list { list-style: none; padding: 0; margin: 0; }
     .ledger-list li { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); font-size: 0.95rem; }
-    .strava-btn { background: #fc4c02; color: white; padding: 16px; border: none; border-radius: 10px; font-weight: 700; width: 100%; text-align: center; }
 
     @media (min-width: 768px) {
       .main-header { flex-direction: row; justify-content: space-between; padding: 20px 40px; }
@@ -219,7 +223,7 @@
   <div id="auth-wall" class="auth-overlay">
     <div class="auth-container">
       <div class="brand-logo">Stride<span>Safe</span></div>
-      <p id="auth-subtitle">Athlete Performance Synchronization Gate</p>
+      <p id="auth-subtitle">Athlete Performance Gate</p>
 
       <div id="signup-form-block">
         <div class="form-group"><label>Email Address</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
@@ -256,6 +260,7 @@
     </header>
 
     <main class="content-container">
+      
       <section id="about-view" class="tab-viewport">
         <div class="editorial-hero">
           <h1>Run Stronger. Stay Healthy.</h1>
@@ -376,10 +381,6 @@
               <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
             <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Biomechanical Audio Cues</div><div class="setting-desc">Trigger vocal notifications through headphones every time a lap splits.</div></div>
-              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
               <div class="setting-info"><div class="setting-title">High-Precision GPS Mapping</div><div class="setting-desc">Increases tracking refresh rate from hardware array (Consumes more battery).</div></div>
               <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
             </div>
@@ -388,36 +389,8 @@
               <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
             </div>
             <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Virtual Pace Ghost</div><div class="setting-desc">Plots a simulated visual runner mark on the map tracking your target target.</div></div>
-              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
               <div class="setting-info"><div class="setting-title">Anomalous Heart Rate Warning</div><div class="setting-desc">Send immediate notifications if linked telemetry sensor crosses peak thresholds.</div></div>
               <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Equipment Degradation Monitor</div><div class="setting-desc">Calculate mechanical lifespan and wear of saved running shoes.</div></div>
-              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Hardware Battery Eco Mode</div><div class="setting-desc">Limits map redraw frequency to expand device longevity during extreme long runs.</div></div>
-              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Strava Automated Uploads</div><div class="setting-desc">Instantly dispatch saved running workouts directly to your public feed.</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Biometric Recovery Buffer</div><div class="setting-desc">Force system to adjust upcoming training volume based on current sleep score.</div></div>
-              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Weather Adaptation Core</div><div class="setting-desc">Recalculate pacing advice dynamically based on high humidity or heat indexes.</div></div>
-              <label class="toggle-switch"><input type="checkbox" checked><span class="slider"></span></label>
-            </div>
-            <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Native Calendar Injection</div><div class="setting-desc">Sync training block cycles straight into your native iOS or device calendar.</div></div>
-              <label class="toggle-switch"><input type="checkbox"><span class="slider"></span></label>
             </div>
           </div>
         </div>
@@ -491,6 +464,9 @@
       applyPlatformThemeEngine();
       syncConfigurationControls();
       renderLeaderboard();
+      
+      // Keep about view open by default on startup/login
+      switchTabViewport('nav-about');
       setTimeout(initializeLeafletMapCanvas, 300);
     }
 
@@ -499,7 +475,7 @@
       appWrapper.classList.add('hidden'); authWall.classList.remove('hidden');
     });
 
-    // 2. STAGE CONFIGURATION ROUTERS
+    // 2. VIEWPORT CONTROLLER ENGINE
     const viewports = {
       'nav-about': document.getElementById('about-view'),
       'nav-home': document.getElementById('home-view'),
@@ -508,12 +484,23 @@
       'nav-settings': document.getElementById('nav-settings-view')
     };
 
+    function switchTabViewport(activeId) {
+      Object.keys(viewports).forEach(id => {
+        if (id === activeId) {
+          viewports[id].classList.remove('hidden');
+          document.getElementById(id).classList.add('active');
+        } else {
+          viewports[id].classList.add('hidden');
+          document.getElementById(id).classList.remove('active');
+        }
+      });
+      if (activeId === 'nav-leaderboard') renderLeaderboard();
+      if (activeId === 'nav-gps') setTimeout(() => { if(leafletMapObjectInstance) leafletMapObjectInstance.invalidateSize(); }, 200);
+    }
+
     Object.keys(viewports).forEach(id => {
       document.getElementById(id).addEventListener('click', function() {
-        Object.keys(viewports).forEach(v => { viewports[v].classList.add('hidden'); document.getElementById(v).classList.remove('active'); });
-        viewports[id].classList.remove('hidden'); this.classList.add('active');
-        if (id === 'nav-leaderboard') renderLeaderboard();
-        if (id === 'nav-gps') setTimeout(() => { if(leafletMapObjectInstance) leafletMapObjectInstance.invalidateSize(); }, 200);
+        switchTabViewport(id);
       });
     });
 
@@ -722,7 +709,7 @@
       }
     });
 
-    // 6. PERFORMANCE MACRO COEFFICIENT GENERATOR
+    // 6. PERFORMANCE CALCULATOR
     document.getElementById('calculate-btn').addEventListener('click', function() {
       const type = document.getElementById('race-type').value;
       const weeks = Number(document.getElementById('weeks').value);
@@ -771,8 +758,8 @@
       }
     });
 
+    // 7. SECURE SESSION GATEWAYS
     window.addEventListener('load', function() {
-      // Robust Fallback: If no session cookie exists, kick back to auth gate instead of blank views
       if (activeUserSessionEmail) {
         initializeClientDashboard(activeUserSessionEmail);
       } else {
