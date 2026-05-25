@@ -47,7 +47,6 @@
     .dashboard-grid { display: flex; flex-direction: column; gap: 16px; }
     .control-panel-card, .telemetry-card, .leaderboard-card, .info-card { background: var(--card-dark); padding: 24px; border-radius: 14px; border: 1px solid var(--border-color); box-sizing: border-box; margin-bottom: 16px; }
     
-    /* ENHANCED ABOUT PAGE STYLES */
     .about-hero { text-align: center; padding: 40px 10px; border-bottom: 1px solid var(--border-color); margin-bottom: 30px; }
     .about-hero h1 { font-size: 2.8rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.04em; }
     .about-hero p { color: var(--text-slate); font-size: 1.2rem; max-width: 700px; margin: 0 auto; line-height: 1.6; }
@@ -78,7 +77,14 @@
     input:checked + .slider { background-color: var(--accent-blue); }
     input:checked + .slider:before { transform: translateX(24px); background-color: #0f172a; }
     .ledger-list { list-style: none; padding: 0; margin: 0; }
-    .ledger-list li { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); }
+    .ledger-list li { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border-color); align-items: center; }
+    
+    .vault-box { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .vault-details { display: flex; flex-direction: column; gap: 4px; }
+    .vault-meta { font-size: 0.8rem; color: var(--text-slate); }
+    .vault-toggle-btn { background: var(--border-color); color: var(--text-light); border: none; padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
+    .vault-toggle-btn.shared { background: var(--success-green); color: #0f172a; }
+
     @media (min-width: 768px) {
       .main-header { flex-direction: row; justify-content: space-between; padding: 20px 40px; }
       .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
@@ -215,14 +221,20 @@
           <div class="control-panel-card">
             <h2>Ledger Control</h2>
             <div class="form-row-split" style="margin-bottom:15px;">
-              <button id="btn-public" class="action-btn active" style="font-size:0.8rem; padding:10px;">Public</button>
-              <button id="btn-private" class="action-btn-secondary" style="font-size:0.8rem; padding:10px;">Private</button>
+              <button id="btn-public" class="action-btn active" style="font-size:0.8rem; padding:10px;">Public Network</button>
+              <button id="btn-private" class="action-btn-secondary" style="font-size:0.8rem; padding:10px;">Private Profile</button>
             </div>
             <div class="form-group"><label>Filter</label><select id="time-filter"><option value="week">Weekly</option><option value="month">Monthly</option></select></div>
-            <div class="manual-log-box">
+            <div class="manual-log-box" style="border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:15px;">
               <h3>Log Workout</h3>
               <div class="form-group"><label id="label-manual-miles">Total Volume</label><input type="number" id="run-miles" placeholder="5"></div>
               <button id="btn-log-run" class="action-btn-secondary">Submit Log</button>
+            </div>
+            <div class="workout-vault-container">
+              <h3>Your Workout Vault</h3>
+              <div id="vault-list-container">
+                <p style="color:var(--text-slate); font-size:0.85rem;">No historical entries recorded yet.</p>
+              </div>
             </div>
           </div>
           <div class="leaderboard-card">
@@ -257,7 +269,7 @@
     function getDatabaseInstance() {
       const db = localStorage.getItem('stridesafe_users');
       if (!db) {
-        const seed = [["coach@stridesafe.com", { password: "Password123", age: 28, dynamicMiles: 34.0 }], ["pro@stridesafe.com", { password: "Password123", age: 31, dynamicMiles: 52.4 }]];
+        const seed = [["coach@stridesafe.com", { password: "Password123", age: 28, dynamicMiles: 34.0, history: [] }], ["pro@stridesafe.com", { password: "Password123", age: 31, dynamicMiles: 52.4, history: [] }]];
         localStorage.setItem('stridesafe_users', JSON.stringify(seed)); return new Map(seed);
       }
       return new Map(JSON.parse(db));
@@ -279,7 +291,7 @@
       const email = document.getElementById('reg-email').value.trim(), password = document.getElementById('reg-password').value, age = Number(document.getElementById('reg-age').value);
       if (!email || !password || !age) return showAuthError("All fields are mandatory.");
       if (registeredUsers.has(email)) return showAuthError("Profile exists.");
-      registeredUsers.set(email, { password: password, age: age, dynamicMiles: 0.0 });
+      registeredUsers.set(email, { password: password, age: age, dynamicMiles: 0.0, history: [] });
       saveDatabaseInstance(registeredUsers); initializeClientDashboard(email);
     });
 
@@ -295,7 +307,7 @@
       activeUserSessionEmail = email; localStorage.setItem('stridesafe_active_user', email);
       document.getElementById('current-user-display').innerText = email.split('@')[0];
       authWall.classList.add('hidden'); appWrapper.classList.remove('hidden');
-      applyPlatformThemeEngine(); syncConfigurationControls(); renderLeaderboard();
+      applyPlatformThemeEngine(); syncConfigurationControls(); renderWorkoutVault(); renderLeaderboard();
       switchTabViewport('nav-about'); setTimeout(initializeLeafletMapCanvas, 300);
     }
 
@@ -315,7 +327,7 @@
         if (id === activeId) { viewports[id].classList.remove('hidden'); document.getElementById(id).classList.add('active'); }
         else { viewports[id].classList.add('hidden'); document.getElementById(id).classList.remove('active'); }
       });
-      if (activeId === 'nav-leaderboard') renderLeaderboard();
+      if (activeId === 'nav-leaderboard') { renderWorkoutVault(); renderLeaderboard(); }
       if (activeId === 'nav-gps' && leafletMapObjectInstance) { setTimeout(() => { leafletMapObjectInstance.invalidateSize(); }, 200); }
     }
 
@@ -325,7 +337,7 @@
     const themeControlCheckbox = document.getElementById('set-theme-toggle'), unitControlCheckbox = document.getElementById('set-unit-toggle');
     function syncConfigurationControls() { themeControlCheckbox.checked = platformThemeConfiguration === 'light'; unitControlCheckbox.checked = platformMetricsScaleSystem === 'km'; updateLabelUIStrings(); }
     themeControlCheckbox.addEventListener('change', function() { platformThemeConfiguration = this.checked ? 'light' : 'dark'; localStorage.setItem('stridesafe_theme', platformThemeConfiguration); applyPlatformThemeEngine(); });
-    unitControlCheckbox.addEventListener('change', function() { platformMetricsScaleSystem = this.checked ? 'km' : 'miles'; localStorage.setItem('stridesafe_unit_system', platformMetricsScaleSystem); updateLabelUIStrings(); renderLeaderboard(); });
+    unitControlCheckbox.addEventListener('change', function() { platformMetricsScaleSystem = this.checked ? 'km' : 'miles'; localStorage.setItem('stridesafe_unit_system', platformMetricsScaleSystem); updateLabelUIStrings(); renderWorkoutVault(); renderLeaderboard(); });
     function applyPlatformThemeEngine() { document.body.classList.toggle('light-theme', platformThemeConfiguration === 'light'); }
     function updateLabelUIStrings() {
       const isKm = platformMetricsScaleSystem === 'km';
@@ -343,22 +355,51 @@
     document.getElementById('btn-private').addEventListener('click', function() { currentPrivacyScope = 'private'; this.classList.add('active'); this.classList.remove('action-btn-secondary'); document.getElementById('btn-public').classList.remove('active'); document.getElementById('btn-public').classList.add('action-btn-secondary'); renderLeaderboard(); });
     document.getElementById('time-filter').addEventListener('change', renderLeaderboard);
 
+    function renderWorkoutVault() {
+      const container = document.getElementById('vault-list-container'); container.innerHTML = "";
+      const db = getDatabaseInstance(); const userData = db.get(activeUserSessionEmail);
+      if (!userData || !userData.history || userData.history.length === 0) { container.innerHTML = `<p style="color:var(--text-slate); font-size:0.85rem;">No historical entries recorded yet.</p>`; return; }
+      const unitStr = platformMetricsScaleSystem === 'km' ? 'KM' : 'Mi'; const paceUnitStr = platformMetricsScaleSystem === 'km' ? '/km' : '/mi';
+      userData.history.forEach((run, index) => {
+        let dist = platformMetricsScaleSystem === 'km' ? run.miles * MILES_TO_KM : run.miles;
+        let pM = Math.floor(run.pace), pS = Math.floor((run.pace % 1) * 60);
+        if (platformMetricsScaleSystem === 'km') { let kmPace = run.pace / MILES_TO_KM; pM = Math.floor(kmPace); pS = Math.floor((kmPace % 1) * 60); }
+        let btnClass = run.public ? "vault-toggle-btn shared" : "vault-toggle-btn"; let btnText = run.public ? "Shared" : "Private";
+        container.innerHTML += `<div class="vault-box"><div class="vault-details"><strong>${dist.toFixed(2)} ${unitStr} — ${run.duration}</strong><span class="vault-meta">Avg Pace: ${pM}:${String(pS).padStart(2,'0')}${paceUnitStr}</span></div><button class="${btnClass}" onclick="toggleWorkoutPrivacy(${index})">${btnText}</button></div>`;
+      });
+    }
+
+    window.toggleWorkoutPrivacy = function(index) {
+      const db = getDatabaseInstance(); const userData = db.get(activeUserSessionEmail);
+      if (userData && userData.history && userData.history[index]) {
+        userData.history[index].public = !userData.history[index].public;
+        let totalPublic = 0; userData.history.forEach(r => { if (r.public) totalPublic += r.miles; });
+        userData.dynamicMiles = totalPublic; db.set(activeUserSessionEmail, userData);
+        saveDatabaseInstance(db); renderWorkoutVault(); renderLeaderboard();
+      }
+    };
+
     function renderLeaderboard() {
       const horizon = document.getElementById('time-filter').value, container = document.getElementById('leaderboard-list'), title = document.getElementById('board-title'), unitStr = platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles';
       container.innerHTML = ""; title.innerText = currentPrivacyScope === 'public' ? `Global Standings (${horizon.toUpperCase()})` : `Your Private Metrics`;
       if (currentPrivacyScope === 'public') {
-        let arr = []; getDatabaseInstance().forEach((data, email) => { arr.push({ name: `${email.split('@')[0]} ${email === activeUserSessionEmail ? '(You)' : ''}`, val: data.dynamicMiles }); });
+        let arr = []; getDatabaseInstance().forEach((data, email) => { arr.push({ name: `${email.split('@')[0]} ${email === activeUserSessionEmail ? '(You)' : ''}`, val: data.dynamicMiles || 0 }); });
         arr.sort((a,b) => b.val - a.val); arr.forEach((rec, i) => { container.innerHTML += `<li><span>${i+1}. ${rec.name}</span> <strong>${formatDistanceDisplayValue(rec.val)} ${unitStr}</strong></li>`; });
       } else {
-        const snap = getDatabaseInstance().get(activeUserSessionEmail); container.innerHTML = `<li><span>🔒 Private Account Log</span> <strong>${snap ? formatDistanceDisplayValue(snap.dynamicMiles) : '0.00'} ${unitStr}</strong></li>`;
+        const snap = getDatabaseInstance().get(activeUserSessionEmail); container.innerHTML = `<li><span>🔒 Private Account Log</span> <strong>${snap ? formatDistanceDisplayValue(snap.dynamicMiles || 0) : '0.00'} ${unitStr}</strong></li>`;
       }
     }
 
     document.getElementById('btn-log-run').addEventListener('click', function() {
       let rawVal = Number(document.getElementById('run-miles').value); if (rawVal <= 0) return alert("Enter value.");
       if (platformMetricsScaleSystem === 'km') rawVal = rawVal / MILES_TO_KM;
-      const db = getDatabaseInstance();
-      if (db.has(activeUserSessionEmail)) { db.get(activeUserSessionEmail).dynamicMiles += rawVal; saveDatabaseInstance(db); document.getElementById('run-miles').value = ""; renderLeaderboard(); }
+      const db = getDatabaseInstance(); const userData = db.get(activeUserSessionEmail);
+      if (userData) {
+        if (!userData.history) userData.history = [];
+        userData.history.push({ miles: rawVal, duration: "Manual", pace: 0, public: false });
+        db.set(activeUserSessionEmail, userData); saveDatabaseInstance(db);
+        document.getElementById('run-miles').value = ""; renderWorkoutVault(); renderLeaderboard(); alert("Workout saved to Vault as Private.");
+      }
     });
 
     let leafletMapObjectInstance = null, mapTrajectoryLine = null, gpsWatchReference = null, secondsElapsedCounter = 0, chronologicalIntervalEngine = null, cumulativeDistanceAccumulatedMiles = 0, trackingCoordinateOrigin = null;
@@ -401,8 +442,16 @@
       if (chronologicalIntervalEngine) clearInterval(chronologicalIntervalEngine);
       this.classList.add('hidden'); document.getElementById('btn-start-track').classList.remove('hidden');
       const statusLbl = document.getElementById('tracker-status'); statusLbl.innerText = "Inactive"; statusLbl.style.color = "var(--text-slate)";
-      const db = getDatabaseInstance();
-      if (cumulativeDistanceAccumulatedMiles > 0 && db.has(activeUserSessionEmail)) { db.get(activeUserSessionEmail).dynamicMiles += cumulativeDistanceAccumulatedMiles; saveDatabaseInstance(db); alert(`Workout saved completely.`); renderLeaderboard(); }
+      const db = getDatabaseInstance(); const userData = db.get(activeUserSessionEmail);
+      if (cumulativeDistanceAccumulatedMiles > 0 && userData) {
+        if (!userData.history) userData.history = [];
+        let finalPace = (secondsElapsedCounter / 60) / cumulativeDistanceAccumulatedMiles;
+        let m = Math.floor(secondsElapsedCounter / 60), s = secondsElapsedCounter % 60;
+        let durationStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        userData.history.push({ miles: cumulativeDistanceAccumulatedMiles, duration: durationStr, pace: finalPace, public: false });
+        db.set(activeUserSessionEmail, userData); saveDatabaseInstance(db);
+        renderWorkoutVault(); renderLeaderboard(); alert(`Workout saved completely to your Vault as Private.`);
+      }
     });
 
     document.getElementById('calculate-btn').addEventListener('click', function() {
@@ -421,9 +470,7 @@
     });
 
     document.getElementById('strava-btn').addEventListener('click', function() {
-      const clientId = "141887";
-      const redirectUri = encodeURIComponent(window.location.origin);
-      window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=activity:read_all`;
+      window.location.href = `https://www.strava.com/oauth/authorize?client_id=141887&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=code&scope=activity:read_all`;
     });
 
     window.addEventListener('load', function() { if (activeUserSessionEmail) { initializeClientDashboard(activeUserSessionEmail); } else { authWall.classList.remove('hidden'); appWrapper.classList.add('hidden'); } });
