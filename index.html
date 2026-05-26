@@ -470,7 +470,7 @@
     });
 
     document.getElementById('strava-btn').addEventListener('click', function() {
-      window.location.href = `https://www.strava.com/oauth/authorize?client_id=141887&redirect_uri=${encodeURIComponent(window.location.origin)}&response_type=code&scope=activity:read_all`;
+      window.location.href = `https://www.strava.com/oauth/authorize?client_id=141887&redirect_uri=https://zaroolfc999-bit.github.io/stridesafe-final-/&response_type=code&scope=activity:read_all`;
     });
 
     window.addEventListener('load', function() { if (activeUserSessionEmail) { initializeClientDashboard(activeUserSessionEmail); } else { authWall.classList.remove('hidden'); appWrapper.classList.add('hidden'); } });
