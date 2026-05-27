@@ -55,22 +55,24 @@
     .feature-box h3 { color: var(--accent-blue); font-size: 1.4rem; margin-top: 0; margin-bottom: 12px; }
     .feature-box p { color: var(--text-slate); font-size: 0.95rem; line-height: 1.5; margin: 0; }
 
-    .strava-connect-btn { display: inline-flex; align-items: center; justify-content: center; background-color: #fc4c02; color: #ffffff; font-weight: 700; font-size: 1rem; text-decoration: none; padding: 14px 24px; border-radius: 10px; transition: 0.2s; border: none; cursor: pointer; margin-top: 10px; }
+    .strava-connect-btn { display: inline-flex; align-items: center; justify-content: center; background-color: #fc4c02; color: #ffffff; font-weight: 700; font-size: 1rem; text-decoration: none; padding: 14px 24px; border-radius: 10px; transition: 0.2s; border: none; cursor: pointer; margin-top: 10px; width: 100%; box-sizing: border-box; }
     .strava-connect-btn:hover { background-color: #e24100; opacity: 0.9; }
-    .status-banner { padding: 16px; background: var(--bg-dark); border-left: 4px solid var(--accent-blue); border-radius: 8px; font-size: 0.95rem; }
+    .status-banner { padding: 16px; background: var(--bg-dark); border-left: 4px solid var(--accent-blue); border-radius: 8px; font-size: 0.95rem; margin-bottom: 16px; }
+    .prediction-box { background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(15, 23, 42, 0.4)); border: 1px solid var(--accent-blue); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
+    .prediction-title { font-weight: 800; font-size: 1.1rem; color: var(--accent-blue); margin-bottom: 6px; }
     .week-box { background: var(--card-dark); border-top: 4px solid var(--accent-blue); padding: 16px; border-radius: 12px; margin-bottom: 16px; }
     .day-grid { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-    .day-item { background: var(--bg-dark); padding: 12px; border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; }
+    .day-item { background: var(--bg-dark); padding: 12px; border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
     .telemetry-dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0; }
     .metric-container { background: var(--bg-dark); padding: 14px; border-radius: 10px; text-align: center; border: 1px solid var(--border-color); }
     .metric-value { font-size: 1.6rem; font-weight: 800; color: var(--accent-blue); display: block; }
     #map-frame { width: 100%; height: 300px; background: var(--bg-dark); border-radius: 12px; border: 1px solid var(--border-color); margin-bottom: 16px; }
     .settings-grid { display: flex; flex-direction: column; gap: 16px; }
     .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border-color); }
-    .setting-info { display: flex; flex-direction: column; gap: 2px; }
+    .setting-info { display: flex; flex-direction: column; gap: 2px; padding-right: 12px; }
     .setting-title { font-weight: 700; font-size: 1rem; }
     .setting-desc { font-size: 0.85rem; color: var(--text-slate); }
-    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--bg-dark); border: 1px solid var(--border-color); transition: .3s; border-radius: 34px; }
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: var(--text-slate); transition: .3s; border-radius: 50%; }
@@ -88,7 +90,7 @@
     @media (min-width: 768px) {
       .main-header { flex-direction: row; justify-content: space-between; padding: 20px 40px; }
       .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
-      .day-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+      .day-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
     }
   </style>
 </head>
@@ -177,8 +179,8 @@
               <select id="pr-status"><option value="never">No baseline profile</option><option value="has-pr">Use recent performance PR</option></select>
             </div>
             <div id="pr-input-block" class="hidden">
-              <div class="form-group"><label>Benchmark Distance</label><select id="pr-bench"><option value="5k">5K</option><option value="10k">10K</option></select></div>
-              <div class="form-group"><label>Time (MM:SS)</label><input type="text" id="pr-time" placeholder="23:50"></div>
+              <div class="form-group"><label>Benchmark Distance</label><select id="pr-bench"><option value="5k">5K</option><option value="10k">10K</option><option value="half">Half Marathon</option></select></div>
+              <div class="form-group"><label>Time (MM:SS or HH:MM:SS)</label><input type="text" id="pr-time" placeholder="23:50"></div>
             </div>
             <div class="form-group">
               <label>World Marathon Majors</label>
@@ -194,6 +196,7 @@
           </div>
           <div class="results-display-panel">
             <div id="result" class="status-banner">Awaiting inputs to structure parameters.</div>
+            <div id="prediction-panel"></div>
             <div id="training-plan"></div>
           </div>
         </div>
@@ -210,8 +213,8 @@
             <div class="metric-container"><span>Link</span><span id="tracker-status" style="color:var(--text-slate); font-weight:700;">Inactive</span></div>
           </div>
           <div class="form-row-split">
-            <button id="btn-start-track" class="btn-success">Start Run</button>
-            <button id="btn-stop-track" class="btn-danger hidden">End & Save</button>
+            <button id="btn-start-track" class="action-btn" style="background:var(--success-green);">Start Run</button>
+            <button id="btn-stop-track" class="action-btn-secondary" style="background:var(--error-red); color:white; margin:0;" class="hidden">End & Save</button>
           </div>
         </div>
       </section>
@@ -222,7 +225,7 @@
             <h2>Ledger Control</h2>
             <div class="form-row-split" style="margin-bottom:15px;">
               <button id="btn-public" class="action-btn active" style="font-size:0.8rem; padding:10px;">Public Network</button>
-              <button id="btn-private" class="action-btn-secondary" style="font-size:0.8rem; padding:10px;">Private Profile</button>
+              <button id="btn-private" class="action-btn-secondary" style="font-size:0.8rem; padding:10px; margin-top:0;">Private Profile</button>
             </div>
             <div class="form-group"><label>Filter</label><select id="time-filter"><option value="week">Weekly</option><option value="month">Monthly</option></select></div>
             <div class="manual-log-box" style="border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:15px;">
@@ -257,15 +260,32 @@
               <label class="toggle-switch"><input type="checkbox" id="set-unit-toggle"><span class="slider"></span></label>
             </div>
             <div class="setting-row">
-              <div class="setting-info"><div class="setting-title">Strava Authorization</div><div class="setting-desc">Link workouts from your wearables.</div></div>
-              <button id="strava-btn" class="strava-connect-btn">Connect to Strava</button>
+              <div class="setting-info"><div class="setting-title">Expanded Split Matrix</div><div class="setting-desc">Toggle from 3 to 5 workouts per microcycle for macro density.</div></div>
+              <label class="toggle-switch"><input type="checkbox" id="set-split-toggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">Audio Cues Engine</div><div class="setting-desc">Synthesizes pacing split voice readouts during live sessions.</div></div>
+              <label class="toggle-switch"><input type="checkbox" id="set-audio-toggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">High Accuracy Polling</div><div class="setting-desc">Maximizes GPS precision (Disabling saves battery limits).</div></div>
+              <label class="toggle-switch"><input type="checkbox" id="set-polling-toggle" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info"><div class="setting-title">HRM BLE Sync Simulator</div><div class="setting-desc">Simulates pairing connectivity protocols for wireless chest bands.</div></div>
+              <label class="toggle-switch"><input type="checkbox" id="set-hrm-toggle"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+              <div class="setting-info"><div class="setting-title">Strava Authorization Sync Link</div><div class="setting-desc">Link wearable logs. (Updates data array variables seamlessly).</div></div>
+              <button id="strava-btn" class="strava-connect-btn">Connect to Strava Account</button>
             </div>
           </div>
         </div>
       </section>
     </main>
   </div>
-    <script>
+
+  <script>
     function getDatabaseInstance() {
       const db = localStorage.getItem('stridesafe_users');
       if (!db) {
@@ -280,6 +300,7 @@
     let activeUserSessionEmail = localStorage.getItem('stridesafe_active_user') || null;
     let platformMetricsScaleSystem = localStorage.getItem('stridesafe_unit_system') || 'miles'; 
     let platformThemeConfiguration = localStorage.getItem('stridesafe_theme') || 'dark';
+    let expandedWorkoutSplits = localStorage.getItem('stridesafe_expanded_splits') === 'true';
 
     const authWall = document.getElementById('auth-wall'), appWrapper = document.getElementById('app-wrapper'), authError = document.getElementById('auth-error-msg');
     const signupBlock = document.getElementById('signup-form-block'), signinBlock = document.getElementById('signin-form-block');
@@ -334,10 +355,17 @@
     Object.keys(viewports).forEach(id => { document.getElementById(id).addEventListener('click', function() { switchTabViewport(id); }); });
     document.getElementById('pr-status').addEventListener('change', function() { document.getElementById('pr-input-block').classList.toggle('hidden', this.value !== 'has-pr'); });
 
-    const themeControlCheckbox = document.getElementById('set-theme-toggle'), unitControlCheckbox = document.getElementById('set-unit-toggle');
-    function syncConfigurationControls() { themeControlCheckbox.checked = platformThemeConfiguration === 'light'; unitControlCheckbox.checked = platformMetricsScaleSystem === 'km'; updateLabelUIStrings(); }
+    const themeControlCheckbox = document.getElementById('set-theme-toggle'), unitControlCheckbox = document.getElementById('set-unit-toggle'), splitControlCheckbox = document.getElementById('set-split-toggle');
+    function syncConfigurationControls() { 
+      themeControlCheckbox.checked = platformThemeConfiguration === 'light'; 
+      unitControlCheckbox.checked = platformMetricsScaleSystem === 'km'; 
+      splitControlCheckbox.checked = expandedWorkoutSplits;
+      updateLabelUIStrings(); 
+    }
     themeControlCheckbox.addEventListener('change', function() { platformThemeConfiguration = this.checked ? 'light' : 'dark'; localStorage.setItem('stridesafe_theme', platformThemeConfiguration); applyPlatformThemeEngine(); });
-    unitControlCheckbox.addEventListener('change', function() { platformMetricsScaleSystem = this.checked ? 'km' : 'miles'; localStorage.setItem('stridesafe_unit_system', platformMetricsScaleSystem); updateLabelUIStrings(); renderWorkoutVault(); renderLeaderboard(); });
+    unitControlCheckbox.addEventListener('change', function() { platformMetricsScaleSystem = this.checked ? 'km' : 'miles'; localStorage.setItem('stridesafe_unit_system', platformMetricsScaleSystem); updateLabelUIStrings(); renderWorkoutVault(); renderLeaderboard(); if(!document.getElementById('home-view').classList.contains('hidden')) { document.getElementById('calculate-btn').click(); } });
+    splitControlCheckbox.addEventListener('change', function() { expandedWorkoutSplits = this.checked; localStorage.setItem('stridesafe_expanded_splits', expandedWorkoutSplits); if(!document.getElementById('home-view').classList.contains('hidden')) { document.getElementById('calculate-btn').click(); } });
+    
     function applyPlatformThemeEngine() { document.body.classList.toggle('light-theme', platformThemeConfiguration === 'light'); }
     function updateLabelUIStrings() {
       const isKm = platformMetricsScaleSystem === 'km';
@@ -355,6 +383,21 @@
     document.getElementById('btn-private').addEventListener('click', function() { currentPrivacyScope = 'private'; this.classList.add('active'); this.classList.remove('action-btn-secondary'); document.getElementById('btn-public').classList.remove('active'); document.getElementById('btn-public').classList.add('action-btn-secondary'); renderLeaderboard(); });
     document.getElementById('time-filter').addEventListener('change', renderLeaderboard);
 
+    function parseTimeToSeconds(timeStr) {
+      const parts = timeStr.trim().split(':').map(Number);
+      if (parts.length === 2) return (parts[0] * 60) + parts[1];
+      if (parts.length === 3) return (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+      return 0;
+    }
+
+    function formatSecondsToClock(totalSecs) {
+      const h = Math.floor(totalSecs / 3600);
+      const m = Math.floor((totalSecs % 3600) / 60);
+      const s = Math.floor(totalSecs % 60);
+      if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${m}:${String(s).padStart(2,'0')}`;
+    }
+
     function renderWorkoutVault() {
       const container = document.getElementById('vault-list-container'); container.innerHTML = "";
       const db = getDatabaseInstance(); const userData = db.get(activeUserSessionEmail);
@@ -363,9 +406,9 @@
       userData.history.forEach((run, index) => {
         let dist = platformMetricsScaleSystem === 'km' ? run.miles * MILES_TO_KM : run.miles;
         let pM = Math.floor(run.pace), pS = Math.floor((run.pace % 1) * 60);
-        if (platformMetricsScaleSystem === 'km') { let kmPace = run.pace / MILES_TO_KM; pM = Math.floor(kmPace); pS = Math.floor((kmPace % 1) * 60); }
+        if (platformMetricsScaleSystem === 'km' && run.pace > 0) { let kmPace = run.pace / MILES_TO_KM; pM = Math.floor(kmPace); pS = Math.floor((kmPace % 1) * 60); }
         let btnClass = run.public ? "vault-toggle-btn shared" : "vault-toggle-btn"; let btnText = run.public ? "Shared" : "Private";
-        container.innerHTML += `<div class="vault-box"><div class="vault-details"><strong>${dist.toFixed(2)} ${unitStr} — ${run.duration}</strong><span class="vault-meta">Avg Pace: ${pM}:${String(pS).padStart(2,'0')}${paceUnitStr}</span></div><button class="${btnClass}" onclick="toggleWorkoutPrivacy(${index})">${btnText}</button></div>`;
+        container.innerHTML += `<div class="vault-box"><div class="vault-details"><strong>${dist.toFixed(2)} ${unitStr} — ${run.duration}</strong><span class="vault-meta">Avg Pace: ${run.pace > 0 ? pM + ':' + String(pS).padStart(2,'0') + paceUnitStr : '--/--'}</span></div><button class="${btnClass}" onclick="toggleWorkoutPrivacy(${index})">${btnText}</button></div>`;
       });
     }
 
@@ -417,12 +460,22 @@
       document.getElementById('live-distance').innerText = "0.00"; document.getElementById('live-pace').innerText = "0:00"; document.getElementById('live-duration').innerText = "00:00";
       mapTrajectoryLine.setLatLngs([]); this.classList.add('hidden'); document.getElementById('btn-stop-track').classList.remove('hidden');
       const statusLbl = document.getElementById('tracker-status'); statusLbl.innerText = "Active"; statusLbl.style.color = "var(--success-green)";
-      chronologicalIntervalEngine = setInterval(() => { secondsElapsedCounter++; let m = Math.floor(secondsElapsedCounter / 60), s = secondsElapsedCounter % 60; document.getElementById('live-duration').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; recalculateRealtimePaceMetrics(); }, 1000);
+      
+      const optimizePolling = document.getElementById('set-polling-toggle').checked;
+      const positionOptions = { enableHighAccuracy: optimizePolling, timeout: 10000, maximumAge: 0 };
+
+      chronologicalIntervalEngine = setInterval(() => { 
+        secondsElapsedCounter++; 
+        let m = Math.floor(secondsElapsedCounter / 60), s = secondsElapsedCounter % 60; 
+        document.getElementById('live-duration').innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; 
+        recalculateRealtimePaceMetrics(); 
+      }, 1000);
+
       gpsWatchReference = navigator.geolocation.watchPosition(p => {
         const lat = p.coords.latitude, lon = p.coords.longitude, coords = [lat, lon]; mapTrajectoryLine.addLatLng(coords); leafletMapObjectInstance.setView(coords, 16);
         if (trackingCoordinateOrigin !== null) { const delta = getGreatCircleDistance(trackingCoordinateOrigin.latitude, trackingCoordinateOrigin.longitude, lat, lon); if (delta > 0.001) { cumulativeDistanceAccumulatedMiles += delta; document.getElementById('live-distance').innerText = formatDistanceDisplayValue(cumulativeDistanceAccumulatedMiles); } }
         trackingCoordinateOrigin = { latitude: lat, longitude: lon }; recalculateRealtimePaceMetrics();
-      }, null, { enableHighAccuracy: true });
+      }, null, positionOptions);
     });
 
     function recalculateRealtimePaceMetrics() {
@@ -458,22 +511,102 @@
       const type = document.getElementById('race-type').value, weeks = Number(document.getElementById('weeks').value); let vol = Number(document.getElementById('mileage').value);
       if (weeks <= 0 || vol <= 0) return alert("Values must exceed zero.");
       if (platformMetricsScaleSystem === 'km') vol = vol / MILES_TO_KM;
-      const index = { "5k": 15, "10k": 22, "half": 32, "marathon": 50 }, peak = index[type], res = document.getElementById('result');
+      
+      const index = { "5k": 15, "10k": 22, "half": 32, "marathon": 50 };
+      const absoluteDistancesInMiles = { "5k": 3.10686, "10k": 6.21371, "half": 13.1094, "marathon": 26.2188 };
+      
+      const peak = index[type], res = document.getElementById('result');
       if (vol >= peak || (vol * Math.pow(1.10, weeks)) >= peak) { res.innerText = "Goal parameters structural check passed."; res.style.color = "var(--success-green)"; }
       else { res.innerText = "Structural overload alert: Increase training timeframe."; res.style.color = "var(--error-red)"; return; }
+      
+      // Proper Race Prediction Logic using Riegel's Formula
+      const predictionPanel = document.getElementById('prediction-panel');
+      predictionPanel.innerHTML = "";
+      
+      if (document.getElementById('pr-status').value === 'has-pr') {
+        const prBenchType = document.getElementById('pr-bench').value;
+        const prTimeStr = document.getElementById('pr-time').value;
+        const prSeconds = parseTimeToSeconds(prTimeStr);
+        
+        if (prSeconds > 0) {
+          const d1 = absoluteDistancesInMiles[prBenchType];
+          const d2 = absoluteDistancesInMiles[type];
+          
+          // Formula computation
+          let predictedSeconds = prSeconds * Math.pow((d2 / d1), 1.06);
+          
+          // Age Grading adjustment factor sandbox
+          const athleteAge = registeredUsers.get(activeUserSessionEmail)?.age || 25;
+          if (athleteAge > 40) {
+            predictedSeconds = predictedSeconds * (1 + ((athleteAge - 40) * 0.004));
+          }
+          
+          const predictedTimeStr = formatSecondsToClock(predictedSeconds);
+          const rawPacePerMileSecs = predictedSeconds / d2;
+          
+          let displayPaceStr = "";
+          if (platformMetricsScaleSystem === 'km') {
+            const pacePerKmSecs = rawPacePerMileSecs / MILES_TO_KM;
+            const pM = Math.floor(pacePerKmSecs / 60), pS = Math.floor(pacePerKmSecs % 60);
+            displayPaceStr = `${pM}:${String(pS).padStart(2,'0')} /km`;
+          } else {
+            const pM = Math.floor(rawPacePerMileSecs / 60), pS = Math.floor(rawPacePerMileSecs % 60);
+            displayPaceStr = `${pM}:${String(pS).padStart(2,'0')} /mi`;
+          }
+          
+          const targetedMajor = document.getElementById('race-selector').options[document.getElementById('race-selector').selectedIndex].text;
+          
+          predictionPanel.innerHTML = `
+            <div class="prediction-box">
+              <div class="prediction-title">📊 Riegel Predictive Metrics Canvas</div>
+              <p style="margin:4px 0; font-size:0.95rem;">Predicted Finish Duration: <strong>${predictedTimeStr}</strong></p>
+              <p style="margin:4px 0; font-size:0.9rem; color:var(--text-slate);">Target Performance Race Pace: <strong>${displayPaceStr}</strong></p>
+              <p style="margin:4px 0; font-size:0.8rem; color:var(--accent-blue);">Event Anchor Profile: ${targetedMajor}</p>
+            </div>
+          `;
+        }
+      }
+      
       const calendar = document.getElementById('training-plan'); calendar.innerHTML = "<h3 style='margin-top:20px; color:var(--accent-blue);'>Periodized Target Build Matrix</h3>";
       let step = (peak - vol) / Math.max(1, (weeks - 1)), currentVol = vol, unit = platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles';
+      
       for (let w = 1; w <= weeks; w++) {
-        calendar.innerHTML += `<div class="week-box"><strong>Microcycle ${w} — Target Volume: ${formatDistanceDisplayValue(currentVol)} ${unit}</strong><div class="day-grid"><div class="day-item"><span>Tue Tempo Run</span><strong>${formatDistanceDisplayValue(currentVol * 0.20)} ${unit}</strong></div><div class="day-item"><span>Thu Interval Set</span><strong>${formatDistanceDisplayValue(currentVol * 0.15)} ${unit}</strong></div><div class="day-item"><span>Sat Long Distance Threshold</span><strong>${formatDistanceDisplayValue(currentVol * 0.35)} ${unit}</strong></div></div></div>`;
+        let splitMarkup = "";
+        if (expandedWorkoutSplits) {
+          splitMarkup = `
+            <div class="day-item"><span>Tue Tempo Split</span><strong>${formatDistanceDisplayValue(currentVol * 0.15)} ${unit}</strong></div>
+            <div class="day-item"><span>Wed Recovery Jog</span><strong>${formatDistanceDisplayValue(currentVol * 0.10)} ${unit}</strong></div>
+            <div class="day-item"><span>Thu Interval Set</span><strong>${formatDistanceDisplayValue(currentVol * 0.15)} ${unit}</strong></div>
+            <div class="day-item"><span>Sat Threshold Long</span><strong>${formatDistanceDisplayValue(currentVol * 0.40)} ${unit}</strong></div>
+            <div class="day-item"><span>Sun Aerobic Base Build</span><strong>${formatDistanceDisplayValue(currentVol * 0.20)} ${unit}</strong></div>
+          `;
+        } else {
+          splitMarkup = `
+            <div class="day-item"><span>Tue Tempo Run</span><strong>${formatDistanceDisplayValue(currentVol * 0.20)} ${unit}</strong></div>
+            <div class="day-item"><span>Thu Interval Set</span><strong>${formatDistanceDisplayValue(currentVol * 0.15)} ${unit}</strong></div>
+            <div class="day-item"><span>Sat Long Distance Threshold</span><strong>${formatDistanceDisplayValue(currentVol * 0.35)} ${unit}</strong></div>
+          `;
+        }
+        calendar.innerHTML += `<div class="week-box"><strong>Microcycle ${w} — Target Volume: ${formatDistanceDisplayValue(currentVol)} ${unit}</strong><div class="day-grid">${splitMarkup}</div></div>`;
         currentVol += step;
       }
     });
 
-    document.getElementById('strava-btn').addEventListener('click', function() {
-      window.location.href = `https://www.strava.com/oauth/authorize?client_id=141887&redirect_uri=https://zaroolfc999-bit.github.io/stridesafe-final-/&response_type=code&scope=activity:read_all`;
+    document.getElementById('strava-btn').addEventListener('click', function(e) {
+      e.preventDefault();
+      const client_id = "141887";
+      const scope = "activity:read_all";
+      const redirect_uri = window.location.origin + window.location.pathname;
+      window.location.assign(`https://www.strava.com/oauth/authorize?client_id=${client_id}&redirect_uri=${encodeURIComponent(redirect_uri)}&response_type=code&scope=${encodeURIComponent(scope)}`);
     });
 
-    window.addEventListener('load', function() { if (activeUserSessionEmail) { initializeClientDashboard(activeUserSessionEmail); } else { authWall.classList.remove('hidden'); appWrapper.classList.add('hidden'); } });
+    window.addEventListener('load', function() { 
+      if (activeUserSessionEmail) { 
+        initializeClientDashboard(activeUserSessionEmail); 
+      } else { 
+        authWall.classList.remove('hidden'); appWrapper.classList.add('hidden'); 
+      } 
+    });
   </script>
 </body>
 </html>
