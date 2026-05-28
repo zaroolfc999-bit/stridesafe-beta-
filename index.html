@@ -87,6 +87,8 @@
     .vault-toggle-btn { background: var(--border-color); color: var(--text-light); border: none; padding: 6px 12px; border-radius: 15px; font-size: 0.75rem; font-weight: 600; cursor: pointer; }
     .vault-toggle-btn.shared { background: var(--success-green); color: #0f172a; }
 
+    .sub-panel-title { font-size: 1.1rem; font-weight: 700; margin-top: 0; margin-bottom: 12px; color: var(--text-light); border-bottom: 1px solid var(--border-color); padding-bottom: 6px; }
+
     @media (min-width: 768px) {
       .main-header { flex-direction: row; justify-content: space-between; padding: 20px 40px; }
       .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; }
@@ -148,8 +150,8 @@
             <p>Our periodization engine calculates safe volume builds based on your current base and upcoming race distance goals.</p>
           </div>
           <div class="feature-box">
-            <h3>Global Leaderboard</h3>
-            <p>Sync your logs and compete with a community of elite athletes. Track your weekly and monthly volume rankings.</p>
+            <h3>Custom Leaderboards</h3>
+            <p>Create or join private tracking alliances or open community arrays. Compete in customized microcycle rankings seamlessly.</p>
           </div>
         </div>
         <div class="info-card" style="margin-top:30px; text-align:center;">
@@ -222,24 +224,43 @@
       <section id="leaderboard-view" class="tab-viewport hidden">
         <div class="dashboard-grid">
           <div class="control-panel-card">
-            <h2>Ledger Control</h2>
-            <div class="form-row-split" style="margin-bottom:15px;">
-              <button id="btn-public" class="action-btn active" style="font-size:0.8rem; padding:10px;">Public Network</button>
-              <button id="btn-private" class="action-btn-secondary" style="font-size:0.8rem; padding:10px; margin-top:0;">Private Profile</button>
+            <h3 class="sub-panel-title">Active Alliance Array</h3>
+            <div class="form-group">
+              <label>Select Active Leaderboard</label>
+              <select id="active-board-selector"></select>
             </div>
-            <div class="form-group"><label>Filter</label><select id="time-filter"><option value="week">Weekly</option><option value="month">Monthly</option></select></div>
-            <div class="manual-log-box" style="border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:15px;">
+            
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 12px;">
+              <h3 class="sub-panel-title" style="font-size:0.95rem;">Join Existing Alliance</h3>
+              <div class="form-group"><label>Board Name Code</label><input type="text" id="join-board-name" placeholder="e.g. SpeedForce"></div>
+              <div id="join-passcode-block" class="form-group hidden"><label>Private Access Pin</label><input type="password" id="join-board-pass" placeholder="4 Digit Pin"></div>
+              <button id="btn-join-board" class="action-btn" style="padding:10px; font-size:0.9rem;">Join Alliance Array</button>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 16px;">
+              <h3 class="sub-panel-title" style="font-size:0.95rem;">Construct New Alliance</h3>
+              <div class="form-group"><label>Alliance Name</label><input type="text" id="create-board-name" placeholder="Unique Identification"></div>
+              <div class="form-group">
+                <label>Privacy Protocol</label>
+                <select id="create-board-privacy"><option value="public">Public Network</option><option value="private">Private (Passcode Lock)</option></select>
+              </div>
+              <div id="create-passcode-block" class="form-group hidden"><label>Set Access Pin</label><input type="password" id="create-board-pass" placeholder="4 Digit Pin"></div>
+              <button id="btn-create-board" class="action-btn-secondary" style="margin-top:0; padding:10px; font-size:0.9rem;">Establish Alliance</button>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 16px;">
               <h3>Log Workout</h3>
               <div class="form-group"><label id="label-manual-miles">Total Volume</label><input type="number" id="run-miles" placeholder="5"></div>
               <button id="btn-log-run" class="action-btn-secondary">Submit Log</button>
             </div>
-            <div class="workout-vault-container">
+            <div class="workout-vault-container" style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 16px;">
               <h3>Your Workout Vault</h3>
               <div id="vault-list-container">
                 <p style="color:var(--text-slate); font-size:0.85rem;">No historical entries recorded yet.</p>
               </div>
             </div>
           </div>
+          
           <div class="leaderboard-card">
             <h3 id="board-title">Global Standings</h3>
             <ol id="leaderboard-list" class="ledger-list"></ol>
@@ -296,11 +317,24 @@
     }
     function saveDatabaseInstance(map) { localStorage.setItem('stridesafe_users', JSON.stringify(Array.from(map.entries()))); }
 
+    function getLeaderboardMatrix() {
+      const boards = localStorage.getItem('stridesafe_boards');
+      if (!boards) {
+        const initialMap = [["Global Network", { type: "public", pass: "", members: ["coach@stridesafe.com", "pro@stridesafe.com"] }]];
+        localStorage.setItem('stridesafe_boards', JSON.stringify(initialMap)); return new Map(initialMap);
+      }
+      return new Map(JSON.parse(boards));
+    }
+    function saveLeaderboardMatrix(map) { localStorage.setItem('stridesafe_boards', JSON.stringify(Array.from(map.entries()))); }
+
     const registeredUsers = getDatabaseInstance();
+    const activeBoards = getLeaderboardMatrix();
+    
     let activeUserSessionEmail = localStorage.getItem('stridesafe_active_user') || null;
     let platformMetricsScaleSystem = localStorage.getItem('stridesafe_unit_system') || 'miles'; 
     let platformThemeConfiguration = localStorage.getItem('stridesafe_theme') || 'dark';
     let expandedWorkoutSplits = localStorage.getItem('stridesafe_expanded_splits') === 'true';
+    let selectedActiveBoardName = localStorage.getItem('stridesafe_selected_board') || "Global Network";
 
     const authWall = document.getElementById('auth-wall'), appWrapper = document.getElementById('app-wrapper'), authError = document.getElementById('auth-error-msg');
     const signupBlock = document.getElementById('signup-form-block'), signinBlock = document.getElementById('signin-form-block');
@@ -313,7 +347,13 @@
       if (!email || !password || !age) return showAuthError("All fields are mandatory.");
       if (registeredUsers.has(email)) return showAuthError("Profile exists.");
       registeredUsers.set(email, { password: password, age: age, dynamicMiles: 0.0, history: [] });
-      saveDatabaseInstance(registeredUsers); initializeClientDashboard(email);
+      saveDatabaseInstance(registeredUsers);
+      
+      const matrix = getLeaderboardMatrix();
+      if (matrix.has("Global Network")) {
+        matrix.get("Global Network").members.push(email); saveLeaderboardMatrix(matrix);
+      }
+      initializeClientDashboard(email);
     });
 
     document.getElementById('btn-submit-signin').addEventListener('click', function() {
@@ -328,7 +368,7 @@
       activeUserSessionEmail = email; localStorage.setItem('stridesafe_active_user', email);
       document.getElementById('current-user-display').innerText = email.split('@')[0];
       authWall.classList.add('hidden'); appWrapper.classList.remove('hidden');
-      applyPlatformThemeEngine(); syncConfigurationControls(); renderWorkoutVault(); renderLeaderboard();
+      applyPlatformThemeEngine(); syncConfigurationControls(); renderWorkoutVault(); updateBoardDropdownOptions(); renderLeaderboard();
       switchTabViewport('nav-about'); setTimeout(initializeLeafletMapCanvas, 300);
     }
 
@@ -348,7 +388,7 @@
         if (id === activeId) { viewports[id].classList.remove('hidden'); document.getElementById(id).classList.add('active'); }
         else { viewports[id].classList.add('hidden'); document.getElementById(id).classList.remove('active'); }
       });
-      if (activeId === 'nav-leaderboard') { renderWorkoutVault(); renderLeaderboard(); }
+      if (activeId === 'nav-leaderboard') { renderWorkoutVault(); updateBoardDropdownOptions(); renderLeaderboard(); }
       if (activeId === 'nav-gps' && leafletMapObjectInstance) { setTimeout(() => { leafletMapObjectInstance.invalidateSize(); }, 200); }
     }
 
@@ -378,10 +418,101 @@
     const MILES_TO_KM = 1.60934;
     function formatDistanceDisplayValue(val) { return platformMetricsScaleSystem === 'km' ? (val * MILES_TO_KM).toFixed(2) : val.toFixed(2); }
 
-    let currentPrivacyScope = 'public';
-    document.getElementById('btn-public').addEventListener('click', function() { currentPrivacyScope = 'public'; this.classList.add('active'); this.classList.remove('action-btn-secondary'); document.getElementById('btn-private').classList.remove('active'); document.getElementById('btn-private').classList.add('action-btn-secondary'); renderLeaderboard(); });
-    document.getElementById('btn-private').addEventListener('click', function() { currentPrivacyScope = 'private'; this.classList.add('active'); this.classList.remove('action-btn-secondary'); document.getElementById('btn-public').classList.remove('active'); document.getElementById('btn-public').classList.add('action-btn-secondary'); renderLeaderboard(); });
-    document.getElementById('time-filter').addEventListener('change', renderLeaderboard);
+    document.getElementById('create-board-privacy').addEventListener('change', function() {
+      document.getElementById('create-passcode-block').classList.toggle('hidden', this.value !== 'private');
+    });
+
+    document.getElementById('join-board-name').addEventListener('input', function() {
+      const matrix = getLeaderboardMatrix(); const target = this.value.trim();
+      if (matrix.has(target) && matrix.get(target).type === 'private') {
+        document.getElementById('join-passcode-block').classList.remove('hidden');
+      } else {
+        document.getElementById('join-passcode-block').classList.add('hidden');
+      }
+    });
+
+    document.getElementById('btn-create-board').addEventListener('click', function() {
+      const name = document.getElementById('create-board-name').value.trim();
+      const privacy = document.getElementById('create-board-privacy').value;
+      const pass = document.getElementById('create-board-pass').value.trim();
+      const matrix = getLeaderboardMatrix();
+
+      if (!name) return alert("Alliance Name field is mandatory.");
+      if (matrix.has(name)) return alert("Alliance Name already exists.");
+      if (privacy === 'private' && !pass) return alert("Private protocols require a passcode lock pin.");
+
+      matrix.set(name, { type: privacy, pass: pass, members: [activeUserSessionEmail] });
+      saveLeaderboardMatrix(matrix);
+      selectedActiveBoardName = name; localStorage.setItem('stridesafe_selected_board', name);
+      
+      document.getElementById('create-board-name').value = "";
+      document.getElementById('create-board-pass').value = "";
+      updateBoardDropdownOptions(); renderLeaderboard(); alert(`Alliance "${name}" established successfully.`);
+    });
+
+    document.getElementById('btn-join-board').addEventListener('click', function() {
+      const name = document.getElementById('join-board-name').value.trim();
+      const pass = document.getElementById('join-board-pass').value.trim();
+      const matrix = getLeaderboardMatrix();
+
+      if (!matrix.has(name)) return alert("Alliance network profile not located.");
+      const board = matrix.get(name);
+      
+      if (board.members.includes(activeUserSessionEmail)) {
+        selectedActiveBoardName = name; localStorage.setItem('stridesafe_selected_board', name);
+        updateBoardDropdownOptions(); renderLeaderboard(); return alert("You are already mapped to this alliance.");
+      }
+
+      if (board.type === 'private' && board.pass !== pass) return alert("Mismatched security authorization access pin.");
+
+      board.members.push(activeUserSessionEmail); matrix.set(name, board);
+      saveLeaderboardMatrix(matrix);
+      selectedActiveBoardName = name; localStorage.setItem('stridesafe_selected_board', name);
+      
+      document.getElementById('join-board-name').value = "";
+      document.getElementById('join-board-pass').value = "";
+      document.getElementById('join-passcode-block').classList.add('hidden');
+      updateBoardDropdownOptions(); renderLeaderboard(); alert(`Joined matrix path inside: ${name}`);
+    });
+
+    document.getElementById('active-board-selector').addEventListener('change', function() {
+      selectedActiveBoardName = this.value; localStorage.setItem('stridesafe_selected_board', this.value);
+      renderLeaderboard();
+    });
+
+    function updateBoardDropdownOptions() {
+      const selector = document.getElementById('active-board-selector'); selector.innerHTML = "";
+      const matrix = getLeaderboardMatrix(); let exists = false;
+      matrix.forEach((data, name) => {
+        if (data.members.includes(activeUserSessionEmail)) {
+          const opt = document.createElement('option'); opt.value = name; opt.innerText = `${name} (${data.type.toUpperCase()})`; selector.appendChild(opt); if (name === selectedActiveBoardName) exists = true;
+        }
+      });
+      if (!exists && selector.options.length > 0) { selectedActiveBoardName = selector.options[0].value; localStorage.setItem('stridesafe_selected_board', selectedActiveBoardName); }
+      selector.value = selectedActiveBoardName;
+    }
+
+    function renderLeaderboard() {
+      const container = document.getElementById('leaderboard-list'), title = document.getElementById('board-title'), unitStr = platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles';
+      container.innerHTML = ""; title.innerText = `${selectedActiveBoardName} Standings`;
+      const matrix = getLeaderboardMatrix(); if (!matrix.has(selectedActiveBoardName)) return;
+
+      const boardData = matrix.get(selectedActiveBoardName); const db = getDatabaseInstance(); const leaderboardArray = [];
+      boardData.members.forEach(email => {
+        if (db.has(email)) {
+          const userData = db.get(email); let totalSharedVolume = 0;
+          if (userData.history) { userData.history.forEach(run => { if (run.public || selectedActiveBoardName !== "Global Network") { totalSharedVolume += run.miles; } }); }
+          if (selectedActiveBoardName === "Global Network" && email === "coach@stridesafe.com") totalSharedVolume = 34.0;
+          if (selectedActiveBoardName === "Global Network" && email === "pro@stridesafe.com") totalSharedVolume = 52.4;
+          leaderboardArray.push({ display: `${email.split('@')[0]} ${email === activeUserSessionEmail ? '(You)' : ''}`, score: totalSharedVolume });
+        }
+      });
+
+      leaderboardArray.sort((a, b) => b.score - a.score);
+      leaderboardArray.forEach((athlete, index) => {
+        container.innerHTML += `<li><span>${index + 1}. ${athlete.display}</span> <strong>${formatDistanceDisplayValue(athlete.score)} ${unitStr}</strong></li>`;
+      });
+    }
 
     function parseTimeToSeconds(timeStr) {
       if (!timeStr || !timeStr.includes(':')) return 0;
@@ -409,7 +540,7 @@
         let dist = platformMetricsScaleSystem === 'km' ? run.miles * MILES_TO_KM : run.miles;
         let pM = Math.floor(run.pace), pS = Math.floor((run.pace % 1) * 60);
         if (platformMetricsScaleSystem === 'km' && run.pace > 0) { let kmPace = run.pace / MILES_TO_KM; pM = Math.floor(kmPace); pS = Math.floor((kmPace % 1) * 60); }
-        let btnClass = run.public ? "vault-toggle-btn shared" : "vault-toggle-btn"; let btnText = run.public ? "Shared" : "Private";
+        let btnClass = run.public ? "vault-toggle-btn shared" : "vault-toggle-btn"; let btnText = run.public ? "Shared Global" : "Private Global";
         container.innerHTML += `<div class="vault-box"><div class="vault-details"><strong>${dist.toFixed(2)} ${unitStr} — ${run.duration}</strong><span class="vault-meta">Avg Pace: ${run.pace > 0 ? pM + ':' + String(pS).padStart(2,'0') + paceUnitStr : '--/--'}</span></div><button class="${btnClass}" onclick="toggleWorkoutPrivacy(${index})">${btnText}</button></div>`;
       });
     }
@@ -424,17 +555,6 @@
       }
     };
 
-    function renderLeaderboard() {
-      const horizon = document.getElementById('time-filter').value, container = document.getElementById('leaderboard-list'), title = document.getElementById('board-title'), unitStr = platformMetricsScaleSystem === 'km' ? 'KM' : 'Miles';
-      container.innerHTML = ""; title.innerText = currentPrivacyScope === 'public' ? `Global Standings (${horizon.toUpperCase()})` : `Your Private Metrics`;
-      if (currentPrivacyScope === 'public') {
-        let arr = []; getDatabaseInstance().forEach((data, email) => { arr.push({ name: `${email.split('@')[0]} ${email === activeUserSessionEmail ? '(You)' : ''}`, val: data.dynamicMiles || 0 }); });
-        arr.sort((a,b) => b.val - a.val); arr.forEach((rec, i) => { container.innerHTML += `<li><span>${i+1}. ${rec.name}</span> <strong>${formatDistanceDisplayValue(rec.val)} ${unitStr}</strong></li>`; });
-      } else {
-        const snap = getDatabaseInstance().get(activeUserSessionEmail); container.innerHTML = `<li><span>🔒 Private Account Log</span> <strong>${snap ? formatDistanceDisplayValue(snap.dynamicMiles || 0) : '0.00'} ${unitStr}</strong></li>`;
-      }
-    }
-
     document.getElementById('btn-log-run').addEventListener('click', function() {
       let rawVal = Number(document.getElementById('run-miles').value); if (rawVal <= 0) return alert("Enter value.");
       if (platformMetricsScaleSystem === 'km') rawVal = rawVal / MILES_TO_KM;
@@ -443,7 +563,7 @@
         if (!userData.history) userData.history = [];
         userData.history.push({ miles: rawVal, duration: "Manual", pace: 0, public: false });
         db.set(activeUserSessionEmail, userData); saveDatabaseInstance(db);
-        document.getElementById('run-miles').value = ""; renderWorkoutVault(); renderLeaderboard(); alert("Workout saved to Vault as Private.");
+        document.getElementById('run-miles').value = ""; renderWorkoutVault(); renderLeaderboard(); alert("Workout locked to Vault successfully.");
       }
     });
 
@@ -505,7 +625,7 @@
         let durationStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
         userData.history.push({ miles: cumulativeDistanceAccumulatedMiles, duration: durationStr, pace: finalPace, public: false });
         db.set(activeUserSessionEmail, userData); saveDatabaseInstance(db);
-        renderWorkoutVault(); renderLeaderboard(); alert(`Workout saved completely to your Vault as Private.`);
+        renderWorkoutVault(); renderLeaderboard(); alert(`Workout completely configured to your private log.`);
       }
     });
 
@@ -523,9 +643,8 @@
       
       const predictionPanel = document.getElementById('prediction-panel');
       
-      // Fallback Engine if user has not typed an explicit PR
       let d1 = absoluteDistancesInMiles["5k"];
-      let prSeconds = parseTimeToSeconds("25:00"); // Base baseline benchmark
+      let prSeconds = parseTimeToSeconds("25:00");
       
       if (document.getElementById('pr-status').value === 'has-pr') {
         const prBenchType = document.getElementById('pr-bench').value;
@@ -596,9 +715,8 @@
 
     document.getElementById('strava-btn').addEventListener('click', function(e) {
       e.preventDefault();
-      const client_id = "141887";
+      const client_id = "251872";
       const scope = "activity:read_all";
-      // Explicit absolute execution to protect base path handshakes
       const clean_origin = window.location.protocol + "//" + window.location.host + window.location.pathname;
       window.location.assign("https://www.strava.com/oauth/authorize?client_id=" + client_id + "&redirect_uri=" + encodeURIComponent(clean_origin) + "&response_type=code&scope=" + encodeURIComponent(scope));
     });
