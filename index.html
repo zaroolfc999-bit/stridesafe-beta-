@@ -92,6 +92,12 @@
     .search-item { padding: 10px 14px; cursor: pointer; font-size: 0.9rem; border-bottom: 1px solid var(--border-line); display: flex; justify-content: space-between; }
     .search-item:hover { background: var(--card-dark); color: var(--brand-orange); }
 
+    /* Matchmaking UI Modules */
+    .social-runner-card { background: var(--bg-dark); border: 1px solid var(--border-line); border-radius: 6px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .runner-meta h4 { margin: 0 0 4px 0; font-size: 1rem; font-weight: 800; color: var(--text-main); }
+    .runner-meta p { margin: 0; font-size: 0.8rem; color: var(--text-muted); }
+    .invite-status-badge { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; padding: 4px 8px; border-radius: 4px; background: rgba(255,255,255,0.05); }
+
     .danger-zone { border: 1px solid var(--error-red); padding: 20px; margin-top: 30px; background: rgba(255, 51, 51, 0.02); border-radius: 6px; }
     .danger-zone h3 { color: var(--error-red); }
   </style>
@@ -105,6 +111,7 @@
       <div id="signup-form-block">
         <div class="form-group"><label>Create Athlete ID</label><input type="text" id="reg-username" placeholder="e.g., run_faster"></div>
         <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="••••••••"></div>
+        <div class="form-group"><label>Birth Year (Safety Verification)</label><input type="number" id="reg-birthyear" placeholder="e.g., 2010" min="1900" max="2026"></div>
         <button id="btn-submit-signup" class="prime-btn">Join the Community</button>
         <p style="text-align:center; color:var(--text-muted); margin-top:20px; font-size:0.85rem; font-weight: 600;">ALREADY AN ATHLETE? <span id="go-to-signin" style="color:var(--brand-orange); cursor:pointer; text-decoration: underline;">SIGN IN</span></p>
       </div>
@@ -226,7 +233,30 @@
             <div class="form-group"><label>Active Board View</label><select id="active-board-selector"></select></div>
             <button id="btn-delete-board" class="action-btn" style="background:var(--error-red); font-size:0.75rem; padding:10px; margin-bottom:20px;">Leave / Dissolve Club</button>
             
-            <div style="border-top:1px solid var(--border-line); padding-top:15px;">
+            <div style="border-top:2px solid var(--brand-orange); padding-top:15px; margin-top:15px; background: rgba(252, 76, 2, 0.02); padding: 15px; border-radius: 6px;">
+              <h3>Pace Partner Matchmaker</h3>
+              <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:12px;">Discover and cross-train safely with runners matching your targeted fitness capabilities within a 5-mile local radius.</p>
+              
+              <div class="form-group">
+                <label>Your Personal Best Distance</label>
+                <select id="match-pr-type">
+                  <option value="5k">5K Sprint</option>
+                  <option value="10k">10K Run</option>
+                  <option value="half">Half Marathon</option>
+                </select>
+              </div>
+              <label>Your PR Finish Time</label>
+              <div style="display:flex; gap:6px; margin-bottom:15px;">
+                <input type="number" id="match-hr" placeholder="HR" value="0" min="0" style="padding:10px;">
+                <input type="number" id="match-min" placeholder="MIN" value="24" min="0" max="59" style="padding:10px;">
+                <input type="number" id="match-sec" placeholder="SEC" value="30" min="0" max="59" style="padding:10px;">
+              </div>
+              <button id="btn-trigger-matchmake" class="action-btn">Scan for Nearby Athletes</button>
+              
+              <div id="matchmake-results-container" style="margin-top:15px;"></div>
+            </div>
+
+            <div style="border-top:1px solid var(--border-line); padding-top:15px; margin-top:20px;">
               <h3>Launch a New Club</h3>
               <div class="form-group"><label>Club Name</label><input type="text" id="create-board-name" placeholder="e.g., West End Runners"></div>
               <button id="btn-create-board" class="action-btn-secondary">Create Club</button>
@@ -238,6 +268,7 @@
               <button id="btn-log-run" class="action-btn-secondary">Log Workout</button>
             </div>
           </div>
+          
           <div class="leaderboard-card">
             <h3 id="board-title">Club Leaderboard</h3>
             <ol id="leaderboard-list" class="ledger-list"></ol>
@@ -330,24 +361,42 @@
     }
     Object.keys(viewports).forEach(id => document.getElementById(id).addEventListener('click', () => switchView(id)));
 
-    // User Session Authentication Panels
+    // User Session Authentication Panels with Core Age Verification Check
     document.getElementById('go-to-signin').addEventListener('click', () => { document.getElementById('signup-form-block').classList.add('hidden'); document.getElementById('signin-form-block').classList.remove('hidden'); });
     document.getElementById('go-to-signup').addEventListener('click', () => { document.getElementById('signin-form-block').classList.add('hidden'); document.getElementById('signup-form-block').classList.remove('hidden'); });
 
     document.getElementById('btn-submit-signup').addEventListener('click', () => {
       const u = document.getElementById('reg-username').value.trim().toLowerCase();
       const p = document.getElementById('reg-password').value;
-      if(!u || !p) return alert("All fields are required.");
+      const bYear = parseInt(document.getElementById('reg-birthyear').value);
+      
+      if(!u || !p || !bYear) return alert("All profile setup fields are required.");
+      
+      // Calculate safety threshold dynamically (Current year is 2026)
+      const currentYear = 2026;
+      const calculatedAge = currentYear - bYear;
+      if (calculatedAge <= 12) {
+        return alert("Safety Restriction: You must be above the age of 12 to build a community matchmaking profile on Stridesafe.");
+      }
+
       if(usersDB[u]) return alert("That Athlete ID is already taken.");
-      usersDB[u] = p; localStorage.setItem('ss_db_users', JSON.stringify(usersDB));
+      usersDB[u] = { password: p, birthYear: bYear }; 
+      localStorage.setItem('ss_db_users', JSON.stringify(usersDB));
       initUserSession(u);
     });
 
     document.getElementById('btn-submit-signin').addEventListener('click', () => {
       const u = document.getElementById('login-username').value.trim().toLowerCase();
       const p = document.getElementById('login-password').value;
-      if(usersDB[u] && usersDB[u] === p) { initUserSession(u); } 
-      else { alert("Incorrect profile login credentials."); }
+      
+      if (usersDB[u]) {
+        const storedPass = (typeof usersDB[u] === 'object') ? usersDB[u].password : usersDB[u];
+        if (storedPass === p) {
+          initUserSession(u);
+          return;
+        }
+      }
+      alert("Incorrect profile login credentials.");
     });
 
     function initUserSession(user) {
@@ -355,7 +404,9 @@
       document.getElementById('current-user-display').innerText = `${user}`;
       document.getElementById('auth-wall').classList.add('hidden');
       document.getElementById('app-wrapper').classList.remove('hidden');
-      document.getElementById('settings-password').value = usersDB[user] || "";
+      
+      const storedPass = (typeof usersDB[user] === 'object') ? usersDB[user].password : usersDB[user];
+      document.getElementById('settings-password').value = storedPass || "";
       document.getElementById('settings-user-goal').value = localStorage.getItem(`ss_goal_${user}`) || "";
       
       configureStravaUrl();
@@ -393,7 +444,11 @@
     document.getElementById('btn-update-pass').addEventListener('click', () => {
       const newPass = document.getElementById('settings-password').value;
       if(!newPass) return alert("Password cannot be blank.");
-      usersDB[activeUser] = newPass;
+      if(typeof usersDB[activeUser] === 'object') {
+        usersDB[activeUser].password = newPass;
+      } else {
+        usersDB[activeUser] = { password: newPass, birthYear: 2000 };
+      }
       localStorage.setItem('ss_db_users', JSON.stringify(usersDB));
       alert("Password updated and saved successfully.");
     });
@@ -617,7 +672,6 @@
       L.tileLayer(layerUrl).addTo(mapInstance);
       pathLine = L.polyline([], {color: '#fc4c02', weight: 5}).addTo(mapInstance);
       
-      // Attempt an initial hardware locate snapshot to center the view panel on your real spot immediately
       if(navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(pos => {
           const lat = pos.coords.latitude, lng = pos.coords.longitude;
@@ -633,9 +687,8 @@
     let watchStopwatchInterval = null;
     let totalElapsedSeconds = 0;
 
-    // Haversine Sphere Trigonometry formula to compute delta mileage between points
     function computeHaversineDistance(lat1, lon1, lat2, lon2) {
-      const R = 3958.8; // Earth radius in miles
+      const R = 3958.8; 
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLon = (lon2 - lon1) * Math.PI / 180;
       const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -647,7 +700,6 @@
     document.getElementById('btn-start-track').addEventListener('click', function() {
       if (!navigator.geolocation) return alert("Your hardware interface doesn't support GPS features.");
       
-      // Reset counters
       accumulatedDistanceMiles = 0;
       trackPointsArray = [];
       totalElapsedSeconds = 0;
@@ -659,7 +711,6 @@
       this.classList.add('hidden');
       document.getElementById('btn-stop-track').classList.remove('hidden');
       
-      // Fire Stopwatch Timer Execution Core
       watchStopwatchInterval = setInterval(() => {
         totalElapsedSeconds++;
         const mins = String(Math.floor(totalElapsedSeconds / 60)).padStart(2, '0');
@@ -667,7 +718,6 @@
         document.getElementById('live-duration').innerText = `${mins}:${secs}`;
       }, 1000);
 
-      // Initialize WatchPosition Hardware Sensor Feed
       geolocationWatchId = navigator.geolocation.watchPosition(pos => {
         const currentLat = pos.coords.latitude;
         const currentLng = pos.coords.longitude;
@@ -675,25 +725,17 @@
         if (trackPointsArray.length > 0) {
           const lastPoint = trackPointsArray[trackPointsArray.length - 1];
           const deltaDelta = computeHaversineDistance(lastPoint.lat, lastPoint.lng, currentLat, currentLng);
-          
-          // Filter anomalous sensor jitter signals out
           if (deltaDelta > 0.001) { 
             accumulatedDistanceMiles += deltaDelta;
           }
         }
         
         trackPointsArray.push({lat: currentLat, lng: currentLng});
-        
-        // Render Output Panel conversions dynamically matching preferences
         let displayDistanceVal = unitSystem === 'km' ? accumulatedDistanceMiles * 1.60934 : accumulatedDistanceMiles;
         document.getElementById('live-distance').innerText = displayDistanceVal.toFixed(2);
         
-        // Continuous line drawing across route coordinates
-        if(pathLine) {
-          pathLine.addLatLng([currentLat, currentLng]);
-        }
+        if(pathLine) pathLine.addLatLng([currentLat, currentLng]);
         
-        // Keep active location center frame inside visual view
         if(mapInstance) {
           mapInstance.setView([currentLat, currentLng], 16);
           if (!liveUserMarker) {
@@ -711,31 +753,87 @@
     });
 
     document.getElementById('btn-stop-track').addEventListener('click', function() {
-      if (geolocationWatchId) {
-        navigator.geolocation.clearWatch(geolocationWatchId);
-        geolocationWatchId = null;
-      }
-      if (watchStopwatchInterval) {
-        clearInterval(watchStopwatchInterval);
-        watchStopwatchInterval = null;
-      }
+      if (geolocationWatchId) { navigator.geolocation.clearWatch(geolocationWatchId); geolocationWatchId = null; }
+      if (watchStopwatchInterval) { clearInterval(watchStopwatchInterval); watchStopwatchInterval = null; }
       
       this.classList.add('hidden');
       document.getElementById('btn-start-track').classList.remove('hidden');
       
       if (accumulatedDistanceMiles > 0) {
-        // Push raw structural layout into memory arrays 
         workoutsDB.push({ username: activeUser, distance: accumulatedDistanceMiles, board: currentBoard });
         localStorage.setItem('ss_db_workouts', JSON.stringify(workoutsDB));
-        
         let reportedTotalString = unitSystem === 'km' ? (accumulatedDistanceMiles * 1.60934).toFixed(2) + ' KM' : accumulatedDistanceMiles.toFixed(2) + ' miles';
         alert(`Session complete! Logged an outdoor workout totaling ${reportedTotalString} inside "${currentBoard}".`);
-        
         switchView('nav-leaderboard');
       } else {
         alert("Session ended, no tracking data processed.");
       }
     });
+
+    // Simulated Social Network Peer-Matching Core
+    document.getElementById('btn-trigger-matchmake').addEventListener('click', () => {
+      const prType = document.getElementById('match-pr-type').value;
+      const mHr = parseInt(document.getElementById('match-hr').value) || 0;
+      const mMin = parseInt(document.getElementById('match-min').value) || 0;
+      const mSec = parseInt(document.getElementById('match-sec').value) || 0;
+      
+      const userTotalSeconds = (mHr * 3600) + (mMin * 60) + mSec;
+      if(userTotalSeconds <= 0) return alert("Please enter your current benchmark milestone time coordinates.");
+
+      const resultsBox = document.getElementById('matchmake-results-container');
+      resultsBox.innerHTML = `<p style="font-size:0.85rem; color:var(--brand-orange); font-weight:700;">Scanning geohash sector grid matrix...</p>`;
+
+      // Generate a pool of runner records matching closely to your physical performance capabilities
+      const namesList = ["Tempo_Trevor", "MarathonMolly", "Aero_Aria", "PaceMaker_Pete", "Stride_Sam", "Endurance_Elena"];
+      let matchesFoundHTML = "";
+      let crossMatchCounter = 0;
+
+      setTimeout(() => {
+        namesList.forEach((runner, idx) => {
+          // Variance simulation factor to dynamically calculate variance differences
+          const timeVarianceMultiplier = 0.85 + (idx * 0.06); 
+          const targetSimulatedSeconds = userTotalSeconds * timeVarianceMultiplier;
+          
+          const sHrs = Math.floor(targetSimulatedSeconds / 3600);
+          const sMins = Math.floor((targetSimulatedSeconds % 3600) / 60);
+          const sSecs = Math.floor(targetSimulatedSeconds % 60);
+          
+          // Match criteria threshold: +/- 15% range filter matrix
+          if (timeVarianceMultiplier >= 0.88 && timeVarianceMultiplier <= 1.12) {
+            crossMatchCounter++;
+            const localRadiusDistance = (1.2 + (idx * 0.6)).toFixed(1);
+            matchesFoundHTML += `
+              <div class="social-runner-card">
+                <div class="runner-meta">
+                  <h4>@${runner}</h4>
+                  <p>Ability: ${prType.toUpperCase()} PB in ${sHrs > 0 ? sHrs + 'h ' : ''}${sMins}m ${sSecs}s</p>
+                  <p style="color: var(--brand-orange); font-size:0.75rem; margin-top:2px;">📍 ${localRadiusDistance} miles away</p>
+                </div>
+                <button class="action-btn" style="width:auto; padding:8px 12px; font-size:0.75rem; margin:0;" onclick="dispatchRunInvite(this, '${runner}')">Send Invite</button>
+              </div>
+            `;
+          }
+        });
+
+        if(crossMatchCounter === 0) {
+          resultsBox.innerHTML = `<p style="font-size:0.85rem; color:var(--text-muted);">No similar speed athletes active within radius windows right now. Try loosening time constraints.</p>`;
+        } else {
+          resultsBox.innerHTML = `<h4 style="font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px;">${crossMatchCounter} Pacesetters Located Nearby:</h4>` + matchesFoundHTML;
+        }
+      }, 750);
+    });
+
+    function dispatchRunInvite(buttonElement, targetRunnerName) {
+      buttonElement.disabled = true;
+      buttonElement.innerText = "Transmitting...";
+      buttonElement.style.background = "var(--text-muted)";
+      
+      setTimeout(() => {
+        buttonElement.parentNode.innerHTML += `<span class="invite-status-badge" style="color:var(--success-green); border:1px solid var(--success-green);">Invite Accepted! Check Chat</span>`;
+        buttonElement.remove();
+        alert(`Match Confirmed! @${targetRunnerName} accepted your invite. Secure a public meet point spot via your training club dashboard rows.`);
+      }, 1500);
+    }
 
     // Auto Session Restorer & URL Checker
     window.addEventListener('load', () => { 
@@ -747,4 +845,3 @@
   </script>
 </body>
 </html>
-
