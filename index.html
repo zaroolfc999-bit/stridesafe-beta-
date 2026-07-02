@@ -10,7 +10,7 @@
     :root {
       --bg-dark: #000000; --card-dark: #111111; --brand-orange: #fc4c02;
       --text-main: #ffffff; --text-muted: #8c8c8c; --border-line: #1a1a1a;
-      --success-green: #00cc66; --error-red: #ff3333;
+      --success-green: #00cc66; --error-red: #ff3333; --spotify-green: #1db954;
     }
     body.light-theme {
       --bg-dark: #f5f5f7; --card-dark: #ffffff; --text-main: #000000;
@@ -40,6 +40,8 @@
     
     .strava-btn { background-color: #fc4c02; color: white; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; border-radius: 6px; text-transform: uppercase; font-size: 0.85rem; border: none; padding: 14px; cursor: pointer; width: 100%; text-decoration: none; }
     .strava-btn:hover { background-color: #e24100; }
+    .spotify-btn { background-color: var(--spotify-green); color: white; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; border-radius: 6px; text-transform: uppercase; font-size: 0.85rem; border: none; padding: 14px; cursor: pointer; width: 100%; text-decoration: none; margin-top: 10px; }
+    .spotify-btn:hover { opacity: 0.9; }
 
     /* Clean, Modern Navigation */
     .main-header { display: flex; flex-direction: column; padding: 20px; background: var(--card-dark); border-bottom: 1px solid var(--border-line); }
@@ -214,8 +216,21 @@
             <div class="metric-container"><span>DISTANCE</span><span id="live-distance" class="metric-value">0.00</span><span id="unit-dist-lbl" style="font-size:0.75rem; color:var(--text-muted);">MILES</span></div>
             <div class="metric-container"><span>ELAPSED TIME</span><span id="live-duration" class="metric-value">00:00</span></div>
           </div>
-          <button id="btn-start-track" class="action-btn" style="background:var(--success-green);">Start Your Run</button>
-          <button id="btn-stop-track" class="action-btn hidden" style="background:var(--error-red);">End & Log Session</button>
+          <button id="btn-start-track" class="action-btn" style="background:var(--success-green); margin-bottom: 15px;">Start Your Run</button>
+          <button id="btn-stop-track" class="action-btn hidden" style="background:var(--error-red); margin-bottom: 15px;">End & Log Session</button>
+          
+          <div id="spotify-player-widget" class="hidden" style="margin-top:20px; border-top:1px solid var(--border-line); padding-top:15px;">
+            <label style="color:var(--spotify-green);">Live Workout Soundtracks</label>
+            <div style="width:100%; border-radius:8px; overflow:hidden; background:#282828; display:flex; align-items:center; padding:15px; box-sizing:border-box; margin-top:10px;">
+              <div style="width:40px; height:40px; background:var(--spotify-green); border-radius:4px; display:flex; align-items:center; justify-content:center; margin-right:15px;">
+                <svg width="20" height="20" fill="#fff" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.565.387-.86.207-2.377-1.454-5.37-1.783-8.894-.982-.336.075-.668-.135-.745-.47-.077-.337.135-.668.47-.745 3.856-.88 7.15-.51 9.822 1.127.296.18.388.565.207.863zm1.224-2.724c-.226.367-.707.487-1.074.26-2.72-1.672-6.87-2.157-10.08-1.182-.413.125-.847-.107-.972-.52-.125-.413.107-.847.52-.972 3.676-1.114 8.243-.573 11.347 1.336.367.226.487.707.26 1.078zm.105-2.825C14.322 8.74 8.37 8.54 4.933 9.584c-.527.16-1.083-.14-1.243-.667-.16-.527.141-1.084.668-1.244 3.96-1.202 10.522-.973 14.654 1.48.475.282.63.897.348 1.372-.282.473-.897.63-1.372.348z"/></svg>
+              </div>
+              <div style="flex:1;">
+                <span id="spotify-status-txt" style="font-size:0.85rem; font-weight:700; display:block; color:#fff;">Pacing Beats Playlist</span>
+                <span style="font-size:0.75rem; color:#b3b3b3;">Connected & Ready to Stream</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -281,11 +296,17 @@
           <h2>Preferences</h2>
           
           <div style="margin-bottom: 25px; background: rgba(252, 76, 2, 0.05); padding: 20px; border-radius: 6px; border: 1px solid rgba(252, 76, 2, 0.25);">
-            <label style="color: var(--brand-orange);">Connected Apps</label>
-            <p style="font-size:0.85rem; color:var(--text-muted); margin: 5px 0 15px 0;">Sync your outdoor runs directly into your Stridesafe metrics engine.</p>
+            <label style="color: var(--brand-orange);">Connected Fitness & Audio Apps</label>
+            <p style="font-size:0.85rem; color:var(--text-muted); margin: 5px 0 15px 0;">Sync outdoor runs and manage audio tracks directly into your dashboard.</p>
+            
             <a id="strava-connect-link" href="#" class="strava-btn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.387 17.944l-2.089-4.116h-3.065l5.154 10.172 5.154-10.172h-3.065l-2.089 4.116zm-7.383-14.544l-5.46 10.748h3.408l2.052-4.04 2.048 4.04h3.412l-5.46-10.748z"/></svg>
               Connect with Strava
+            </a>
+
+            <a id="spotify-connect-link" href="#" class="spotify-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm4.586 14.424c-.18.295-.565.387-.86.207-2.377-1.454-5.37-1.783-8.894-.982-.336.075-.668-.135-.745-.47-.077-.337.135-.668.47-.745 3.856-.88 7.15-.51 9.822 1.127.296.18.388.565.207.863zm1.224-2.724c-.226.367-.707.487-1.074.26-2.72-1.672-6.87-2.157-10.08-1.182-.413.125-.847-.107-.972-.52-.125-.413.107-.847.52-.972 3.676-1.114 8.243-.573 11.347 1.336.367.226.487.707.26 1.078zm.105-2.825C14.322 8.74 8.37 8.54 4.933 9.584c-.527.16-1.083-.14-1.243-.667-.16-.527.141-1.084.668-1.244 3.96-1.202 10.522-.973 14.654 1.48.475.282.63.897.348 1.372-.282.473-.897.63-1.372.348z"/></svg>
+              Connect with Spotify
             </a>
           </div>
 
@@ -372,7 +393,6 @@
       
       if(!u || !p || !bYear) return alert("All profile setup fields are required.");
       
-      // Calculate safety threshold dynamically (Current year is 2026)
       const currentYear = 2026;
       const calculatedAge = currentYear - bYear;
       if (calculatedAge <= 12) {
@@ -409,26 +429,34 @@
       document.getElementById('settings-password').value = storedPass || "";
       document.getElementById('settings-user-goal').value = localStorage.getItem(`ss_goal_${user}`) || "";
       
-      configureStravaUrl();
+      configureExternalServiceUrls();
       syncSettingsUIElements();
+      checkActiveMusicSession();
       switchView('nav-about');
       setTimeout(initMap, 200);
     }
 
     document.getElementById('btn-logout').addEventListener('click', () => {
-      localStorage.removeItem('ss_active_user'); location.reload();
+      localStorage.removeItem('ss_active_user'); localStorage.removeItem('ss_spotify_tok'); location.reload();
     });
 
-    // Strava Integration Link Builder
-    function configureStravaUrl() {
-      const clientID = "251872";
+    // Integrated Third Party API Link Configuration Routing
+    function configureExternalServiceUrls() {
+      // Strava OAuth Initialization Config
+      const stravaClientID = "251872";
       const cleanRedirectUri = window.location.origin + window.location.pathname;
-      const stravaUrl = `https://www.strava.com/oauth/authorize?client_id=${clientID}&redirect_uri=${encodeURIComponent(cleanRedirectUri)}&response_type=code&scope=activity:read_all`;
+      const stravaUrl = `https://www.strava.com/oauth/authorize?client_id=${stravaClientID}&redirect_uri=${encodeURIComponent(cleanRedirectUri)}&response_type=code&scope=activity:read_all`;
       document.getElementById('strava-connect-link').href = stravaUrl;
+
+      // Spotify Developer API Core integration Configuration
+      const spotifyClientID = "2673c0c013914bc1953ba14f30043ecd";
+      const spotifyScopes = "playlist-read-private user-read-currently-playing";
+      const spotifyUrl = `https://accounts.spotify.com/authorize?client_id=${spotifyClientID}&redirect_uri=${encodeURIComponent(cleanRedirectUri)}&scope=${encodeURIComponent(spotifyScopes)}&response_type=token&show_dialog=true`;
+      document.getElementById('spotify-connect-link').href = spotifyUrl;
     }
 
-    // Checking incoming OAuth callbacks from Strava
-    function processStravaCallback() {
+    // Checking incoming OAuth callbacks from external network handshakes
+    function processIncomingExternalCallbacks() {
       const urlParams = new URLSearchParams(window.location.search);
       const stravaCode = urlParams.get('code');
       if(stravaCode && activeUser) {
@@ -437,6 +465,28 @@
         localStorage.setItem('ss_db_workouts', JSON.stringify(workoutsDB));
         window.history.replaceState({}, document.title, window.location.pathname);
         renderLeaderboards();
+      }
+
+      // Check for Spotify Access Token parameters inside URL Hash
+      if(window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const spotifyToken = hashParams.get('access_token');
+        if(spotifyToken) {
+          localStorage.setItem('ss_spotify_tok', spotifyToken);
+          alert("Spotify Audio Connection Authorized Successfully! Core playlist metrics active.");
+          window.history.replaceState({}, document.title, window.location.pathname);
+          checkActiveMusicSession();
+        }
+      }
+    }
+
+    function checkActiveMusicSession() {
+      const token = localStorage.getItem('ss_spotify_tok');
+      const playerWidget = document.getElementById('spotify-player-widget');
+      if(token) {
+        playerWidget.classList.remove('hidden');
+      } else {
+        playerWidget.classList.add('hidden');
       }
     }
 
@@ -466,7 +516,7 @@
       workoutsDB = workoutsDB.filter(w => w.username !== activeUser);
       localStorage.setItem('ss_db_users', JSON.stringify(usersDB));
       localStorage.setItem('ss_db_workouts', JSON.stringify(workoutsDB));
-      localStorage.removeItem('ss_active_user');
+      localStorage.removeItem('ss_active_user'); localStorage.removeItem('ss_spotify_tok');
       location.reload();
     });
 
@@ -783,14 +833,12 @@
       const resultsBox = document.getElementById('matchmake-results-container');
       resultsBox.innerHTML = `<p style="font-size:0.85rem; color:var(--brand-orange); font-weight:700;">Scanning geohash sector grid matrix...</p>`;
 
-      // Generate a pool of runner records matching closely to your physical performance capabilities
       const namesList = ["Tempo_Trevor", "MarathonMolly", "Aero_Aria", "PaceMaker_Pete", "Stride_Sam", "Endurance_Elena"];
       let matchesFoundHTML = "";
       let crossMatchCounter = 0;
 
       setTimeout(() => {
         namesList.forEach((runner, idx) => {
-          // Variance simulation factor to dynamically calculate variance differences
           const timeVarianceMultiplier = 0.85 + (idx * 0.06); 
           const targetSimulatedSeconds = userTotalSeconds * timeVarianceMultiplier;
           
@@ -798,7 +846,6 @@
           const sMins = Math.floor((targetSimulatedSeconds % 3600) / 60);
           const sSecs = Math.floor(targetSimulatedSeconds % 60);
           
-          // Match criteria threshold: +/- 15% range filter matrix
           if (timeVarianceMultiplier >= 0.88 && timeVarianceMultiplier <= 1.12) {
             crossMatchCounter++;
             const localRadiusDistance = (1.2 + (idx * 0.6)).toFixed(1);
@@ -839,8 +886,8 @@
     window.addEventListener('load', () => { 
       if(activeUser) {
         initUserSession(activeUser);
-        processStravaCallback();
       }
+      processIncomingExternalCallbacks();
     });
   </script>
 </body>
