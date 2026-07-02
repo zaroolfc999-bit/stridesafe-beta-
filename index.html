@@ -456,11 +456,12 @@
     }
 
 
-    // Checking incoming OAuth callbacks from external network handshakes
-    function processIncomingExternalCallbacks() {
+        function processIncomingExternalCallbacks() {
       const urlParams = new URLSearchParams(window.location.search);
+      
+      // Strava Handler
       const stravaCode = urlParams.get('code');
-      if(stravaCode && activeUser) {
+      if(stravaCode && activeUser && !window.location.search.includes('spotify')) {
         alert("Authorization Code received from Strava! Running in client mode: logging dummy 5K benchmark run from connection sync.");
         workoutsDB.push({ username: activeUser, distance: 3.11, board: "Global Network" });
         localStorage.setItem('ss_db_workouts', JSON.stringify(workoutsDB));
@@ -468,18 +469,16 @@
         renderLeaderboards();
       }
 
-      // Check for Spotify Access Token parameters inside URL Hash
-      if(window.location.hash) {
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const spotifyToken = hashParams.get('access_token');
-        if(spotifyToken) {
-          localStorage.setItem('ss_spotify_tok', spotifyToken);
-          alert("Spotify Audio Connection Authorized Successfully! Core playlist metrics active.");
-          window.history.replaceState({}, document.title, window.location.pathname);
-          checkActiveMusicSession();
-        }
+      // Spotify Handler - Look for code in the URL parameters
+      const spotifyCode = urlParams.get('code');
+      if(spotifyCode) {
+        localStorage.setItem('ss_spotify_tok', spotifyCode);
+        alert("Spotify Audio Connection Authorized Successfully! Core playlist metrics active.");
+        window.history.replaceState({}, document.title, window.location.pathname);
+        checkActiveMusicSession();
       }
     }
+
 
     function checkActiveMusicSession() {
       const token = localStorage.getItem('ss_spotify_tok');
