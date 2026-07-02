@@ -103,6 +103,7 @@
     .danger-zone { border: 1px solid var(--error-red); padding: 20px; margin-top: 30px; background: rgba(255, 51, 51, 0.02); border-radius: 6px; }
     .danger-zone h3 { color: var(--error-red); }
   </style>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
 </head>
 <body>
 
@@ -881,6 +882,37 @@
         alert(`Match Confirmed! @${targetRunnerName} accepted your invite. Secure a public meet point spot via your training club dashboard rows.`);
       }, 1500);
     }
+
+        // Spotify Web Playback SDK Initialization and Device Connector
+    window.onSpotifyWebPlaybackSDKReady = () => {
+      const token = localStorage.getItem('ss_spotify_tok');
+      if (!token) return;
+
+      const player = new Spotify.Player({
+        name: 'StrideSafe Live Stream Dashboard',
+        getOAuthToken: cb => { cb(token); },
+        volume: 0.5
+      });
+
+      // Connection Status Diagnostics
+      player.addListener('ready', ({ device_id }) => {
+        console.log('StrideSafe Player is ready with Device ID:', device_id);
+        document.getElementById('spotify-status-txt').innerText = "Streaming Engine Ready";
+      });
+
+      player.addListener('not_ready', ({ device_id }) => {
+        console.log('Device ID has gone offline:', device_id);
+      });
+
+      // Track State Change Monitor (Updates UI text dynamically when song changes)
+      player.addListener('player_state_changed', state => {
+        if (!state) return;
+        const currentTrack = state.track_window.current_track;
+        document.getElementById('spotify-status-txt').innerText = `🎵 ${currentTrack.name} — ${currentTrack.artists[0].name}`;
+      });
+
+      player.connect();
+    };
 
     // Auto Session Restorer & URL Checker
     window.addEventListener('load', () => { 
