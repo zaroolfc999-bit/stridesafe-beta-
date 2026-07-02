@@ -440,7 +440,7 @@
       localStorage.removeItem('ss_active_user'); localStorage.removeItem('ss_spotify_tok'); location.reload();
     });
 
-    // Integrated Third Party API Link Configuration Routing
+        // Integrated Third Party API Link Configuration Routing
     function configureExternalServiceUrls() {
       // Strava OAuth Initialization Config
       const stravaClientID = "251872";
@@ -448,12 +448,13 @@
       const stravaUrl = `https://www.strava.com/oauth/authorize?client_id=${stravaClientID}&redirect_uri=${encodeURIComponent(cleanRedirectUri)}&response_type=code&scope=activity:read_all`;
       document.getElementById('strava-connect-link').href = stravaUrl;
 
-      // Spotify Developer API Core integration Configuration
+      // Spotify Developer API Config - CHANGED response_type TO code
       const spotifyClientID = "2673c0c013914bc1953ba14f30043ecd";
       const spotifyScopes = "playlist-read-private user-read-currently-playing";
-      const spotifyUrl = `https://accounts.spotify.com/authorize?client_id=${spotifyClientID}&redirect_uri=${encodeURIComponent(cleanRedirectUri)}&scope=${encodeURIComponent(spotifyScopes)}&response_type=token&show_dialog=true`;
+      const spotifyUrl = `https://accounts.spotify.com/authorize?client_id=${spotifyClientID}&redirect_uri=${encodeURIComponent(cleanRedirectUri)}&scope=${encodeURIComponent(spotifyScopes)}&response_type=code&show_dialog=true`;
       document.getElementById('spotify-connect-link').href = spotifyUrl;
     }
+
 
     // Checking incoming OAuth callbacks from external network handshakes
     function processIncomingExternalCallbacks() {
