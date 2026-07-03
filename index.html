@@ -472,12 +472,36 @@
 
       // Spotify Handler - Look for code in the URL parameters
       const spotifyCode = urlParams.get('code');
-      if(spotifyCode) {
-        localStorage.setItem('ss_spotify_tok', spotifyCode);
-        alert("Spotify Audio Connection Authorized Successfully! Core playlist metrics active.");
-        window.history.replaceState({}, document.title, window.location.pathname);
-        checkActiveMusicSession();
-      }
+      if (spotifyCode) {
+    // Send the code to your Render server to swap it for a real access token
+    fetch('https://stridesafe-beta.onrender.com/api/token', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code: spotifyCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.access_token) {
+            // Save the REAL access token where your app expects it
+            localStorage.setItem('ss_spotify_tok', data.access_token);
+            alert("Spotify Audio Connection Authorized Successfully! Core playlist metrics active.");
+            
+            // Clean up the URL and kickstart the music session
+            window.history.replaceState({}, document.title, window.location.pathname);
+            checkActiveMusicSession();
+        } else {
+            console.error('Backend did not return an access token:', data);
+            alert("Authentication failed. Please try logging into Spotify again.");
+        }
+    })
+    .catch(error => {
+        console.error('Error connecting to Render backend:', error);
+        alert("Could not connect to authentication server.");
+    });
+}
+
     }
 
 
