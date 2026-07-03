@@ -506,15 +506,58 @@
 
 
     function checkActiveMusicSession() {
-      const token = localStorage.getItem('ss_spotify_tok');
-      const playerWidget = document.getElementById('spotify-player-widget');
-      if(token) {
-        playerWidget.classList.remove('hidden');
-      } else {
-        playerWidget.classList.add('hidden');
-      }
+    const token = localStorage.getItem('ss_spotify_tok');
+    const playerWidget = document.getElementById('spotify-player-widget');
+    if (token) {
+        if (playerWidget) playerWidget.classList.remove('hidden');
+        
+        // Run it immediately
+        fetchCurrentTrack();
+        
+        // Check for new songs every 5 seconds (5000 milliseconds)
+        setInterval(fetchCurrentTrack, 5000);
+    } else {
+        if (playerWidget) playerWidget.classList.add('hidden');
     }
+}
 
+  function fetchCurrentTrack() {
+    const token = localStorage.getItem('ss_spotify_tok');
+    if (!token) return;
+
+    // Ask Spotify what is playing right now
+    fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+        headers: {
+            'Authorization': 'Bearer ' + token
+        }
+    })
+    .then(response => {
+        if (response.status === 204) {
+            // Success, but nothing is actively playing
+            return null;
+        }
+        return response.json();
+    })
+    .then(data => {
+        const statusText = document.querySelector('.live-workout-soundtracks p') || document.getElementById('spotify-player-widget'); 
+        
+        if (data && data.item) {
+            const trackName = data.item.name;
+            const artistName = data.item.artists[0].name;
+            
+            // Update the text on your screen dynamically!
+            if (statusText) {
+                statusText.innerHTML = `<strong>${trackName}</strong><br>by ${artistName}`;
+            }
+        } else {
+            if (statusText) {
+                statusText.innerText = "Connected & Ready to Stream (No music playing)";
+            }
+        }
+    })
+    .catch(err => console.error('Error fetching current track:', err));
+}
+  
     // Save Settings Elements
     document.getElementById('btn-update-pass').addEventListener('click', () => {
       const newPass = document.getElementById('settings-password').value;
