@@ -532,32 +532,26 @@
         }
     })
     .then(response => {
-        if (response.status === 204) {
-            // Success, but nothing is actively playing
+        if (response.status === 204 || response.status === 401) {
             return null;
         }
         return response.json();
     })
     .then(data => {
-        const statusText = document.querySelector('.live-workout-soundtracks p') || document.getElementById('spotify-player-widget'); 
+        // Target the exact ID from your HTML layout
+        const statusText = document.getElementById('spotify-status-txt'); 
         
-        if (data && data.item) {
+        if (data && data.item && statusText) {
             const trackName = data.item.name;
             const artistName = data.item.artists[0].name;
             
-            // Update the text on your screen dynamically!
-            if (statusText) {
-                statusText.innerHTML = `<strong>${trackName}</strong><br>by ${artistName}`;
-            }
-        } else {
-            if (statusText) {
-                statusText.innerText = "Connected & Ready to Stream (No music playing)";
-            }
+            // Update the screen text dynamically
+            statusText.innerHTML = `🎵 ${trackName} - ${artistName}`;
         }
     })
     .catch(err => console.error('Error fetching current track:', err));
 }
-  
+
     // Save Settings Elements
     document.getElementById('btn-update-pass').addEventListener('click', () => {
       const newPass = document.getElementById('settings-password').value;
